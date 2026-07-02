@@ -505,6 +505,28 @@ body {
 </div><!-- /app-root -->
 
 <script>
+// ===== FIREBASE (precisa vir ANTES do AUTH: o login automático da sessão
+// salva chama initFirebase() de imediato, então "db" já precisa existir) =====
+const firebaseConfig = {
+  apiKey: "AIzaSyDsKKZaK1WBo3FjNo-2o0O5a0ehV4tDy4U",
+  authDomain: "vagas-terceirizados-portoex.firebaseapp.com",
+  databaseURL: "https://vagas-terceirizados-portoex-default-rtdb.firebaseio.com",
+  projectId: "vagas-terceirizados-portoex",
+  storageBucket: "vagas-terceirizados-portoex.firebasestorage.app",
+  messagingSenderId: "688106736915",
+  appId: "1:688106736915:web:412ff19368208198269ee6"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let STATE = { acompanhamento: {}, motoristas: {} };
+let mdSaveTimeout = {};
+
+function initFirebase() {
+  db.ref('acompanhamento').on('value', snap => { STATE.acompanhamento = snap.val() || {}; render(); });
+  db.ref('motoristas').on('value',     snap => { STATE.motoristas     = snap.val() || {}; render(); });
+}
+
 // ===== AUTH — SISTEMA DE USUÁRIOS PORTOEX-TV =====
 const TV_USERS_KEY   = 'portoex_tv_users_v2';
 const TV_SESSION_KEY = 'portoex_tv_session';
@@ -699,27 +721,6 @@ function clearAdmForm() {
   document.getElementById('adm-filtro').value = '';
   document.getElementById('adm-filtro-wrap').style.display = 'none';
   document.getElementById('adm-form-title').textContent = '➕ Novo Usuário';
-}
-
-// ===== FIREBASE =====
-const firebaseConfig = {
-  apiKey: "AIzaSyDsKKZaK1WBo3FjNo-2o0O5a0ehV4tDy4U",
-  authDomain: "vagas-terceirizados-portoex.firebaseapp.com",
-  databaseURL: "https://vagas-terceirizados-portoex-default-rtdb.firebaseio.com",
-  projectId: "vagas-terceirizados-portoex",
-  storageBucket: "vagas-terceirizados-portoex.firebasestorage.app",
-  messagingSenderId: "688106736915",
-  appId: "1:688106736915:web:412ff19368208198269ee6"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-let STATE = { acompanhamento: {}, motoristas: {} };
-let mdSaveTimeout = {};
-
-function initFirebase() {
-  db.ref('acompanhamento').on('value', snap => { STATE.acompanhamento = snap.val() || {}; render(); });
-  db.ref('motoristas').on('value',     snap => { STATE.motoristas     = snap.val() || {}; render(); });
 }
 
 // ===== RELÓGIO =====
