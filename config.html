@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DASCH — Configurações do Painel</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+:root{
+  --verde: #1e8e3e;
+  --verde-escuro: #146428;
+  --amarelo: #f4c20d;
+  --navy: #0b1220;
+  --card: #17203a;
+  --texto: #eef2f8;
+  --muted: #93a1bb;
+  --vermelho: #e64545;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;min-height:100%;background:#000;font-family:'Segoe UI',Arial,sans-serif;color:var(--texto);}
+button{font-family:inherit;cursor:pointer;}
+input,select,textarea{font-family:inherit;}
+
+#configScreen{
+  min-height:100vh;width:100%;background:linear-gradient(160deg,#0b1220,#182338);
+  padding:28px 40px 60px;
+}
+.cfg-header{display:flex;align-items:center;gap:16px;margin-bottom:10px;}
+.cfg-header .logo{background:var(--amarelo);color:#111;font-weight:800;padding:8px 16px;border-radius:6px;font-size:22px;letter-spacing:1px;}
+.cfg-header h1{font-size:26px;margin:0;font-weight:700;}
+.cfg-header p{margin:2px 0 0;color:var(--muted);font-size:14px;}
+
+.cloud-status{max-width:1400px;margin:0 auto 20px;font-size:13px;padding:8px 14px;border-radius:8px;display:flex;align-items:center;gap:8px;}
+.cloud-status.ok{background:rgba(30,142,62,.15);border:1px solid rgba(30,142,62,.4);color:#5fd487;}
+.cloud-status.fail{background:rgba(230,69,69,.15);border:1px solid rgba(230,69,69,.4);color:#ff8a8a;}
+.cloud-status.loading{background:rgba(147,161,187,.1);border:1px solid #33405f;color:var(--muted);}
+
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:1400px;margin:0 auto;}
+.cfg-box{background:var(--card);border:1px solid #26314f;border-radius:12px;padding:22px 24px;}
+.cfg-box h2{font-size:17px;margin:0 0 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid #26314f;padding-bottom:10px;}
+.cfg-box label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px;font-weight:600;}
+.cfg-box input[type=text],.cfg-box input[type=date],.cfg-box input[type=number],.cfg-box input[type=email],.cfg-box input[type=password],.cfg-box textarea,.cfg-box select{
+  width:100%;padding:9px 11px;border-radius:6px;border:1px solid #33405f;background:#0f1626;color:var(--texto);font-size:14px;
+}
+.cfg-box textarea{min-height:70px;resize:vertical;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.row3{display:grid;grid-template-columns:2fr 1.3fr 1.6fr auto;gap:10px;align-items:end;}
+.small-btn{background:var(--verde);border:none;color:#fff;padding:9px 14px;border-radius:6px;font-size:13px;font-weight:700;}
+.small-btn.secondary{background:#33405f;}
+.small-btn.danger{background:var(--vermelho);}
+.team-list{margin-top:14px;max-height:220px;overflow-y:auto;border-radius:8px;}
+.team-list table{width:100%;border-collapse:collapse;font-size:13px;}
+.team-list th{text-align:left;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid #26314f;position:sticky;top:0;background:var(--card);}
+.team-list td{padding:7px 8px;border-bottom:1px solid #1e2740;}
+.team-list td.op-badge{color:var(--amarelo);font-weight:700;}
+.hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;}
+.cfg-box-wide{grid-column:1 / -1;}
+.zoom-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.vehicle-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.vehicle-tag{background:#0f1626;border:1px solid #33405f;border-radius:14px;padding:4px 10px;font-size:12px;display:flex;align-items:center;gap:6px;}
+.vehicle-tag button{background:none;border:none;color:var(--vermelho);font-weight:800;cursor:pointer;font-size:13px;padding:0;}
+.ops-cfg-radio{display:flex;gap:8px;font-size:11px;flex-wrap:wrap;}
+.ops-cfg-radio label{display:flex;align-items:center;gap:3px;color:var(--muted);white-space:nowrap;}
+.ops-pct{background:#0f1626;border:1px solid #26314f;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:800;color:var(--amarelo);white-space:nowrap;}
+
+.cfg-footer{max-width:1400px;margin:28px auto 0;display:flex;gap:14px;align-items:center;justify-content:flex-end;}
+.big-btn{background:var(--amarelo);color:#111;border:none;padding:16px 30px;border-radius:8px;font-size:17px;font-weight:800;letter-spacing:.3px;box-shadow:0 4px 14px rgba(244,194,13,.35);}
+.ghost-btn{background:transparent;border:1px solid #33405f;color:var(--texto);padding:16px 22px;border-radius:8px;font-size:15px;}
+.saved-msg{color:var(--verde);font-size:13px;font-weight:700;opacity:0;transition:opacity .3s;}
+.saved-msg.show{opacity:1;}
+</style>
+</head>
+<body>
+
+<div id="configScreen">
+  <div class="cfg-header">
+    <div class="logo">PORTOEX</div>
+    <div>
+      <h1>DASCH — Configurações do Painel</h1>
+      <p>Este arquivo é só para cadastro/configuração. A exibição roda em outro arquivo (display.html) — o que você salvar aqui chega sozinho na TV pela nuvem, sem precisar mexer nela.</p>
+    </div>
+  </div>
+
+  <div class="cloud-status loading" id="cloudStatus">☁️ Conectando à nuvem…</div>
+
+  <div class="cfg-grid">
+
+    <div class="cfg-box">
+      <h2>📢 Letreiro (Ticker)</h2>
+      <label>Texto que ficará rolando na tela</label>
+      <textarea id="cfgTicker" placeholder="Ex: Bem-vindo à PortoEx! Trabalhe com segurança todos os dias."></textarea>
+    </div>
+
+    <div class="cfg-box">
+      <h2>⏱ Telas — Duração e Zoom</h2>
+      <div class="hint" style="margin-top:0;">Cada tela roda o tempo definido abaixo e pode ter um zoom próprio (100% = tamanho normal).</div>
+
+      <div class="zoom-row">
+        <div><label>Duração Tela 1 — Produtividade (s)</label><input type="number" id="cfgDur1" min="5" value="20"/></div>
+        <div><label>Zoom Tela 1 (%)</label><input type="number" id="cfgZoom1" min="50" max="200" value="100"/></div>
+      </div>
+      <div class="zoom-row">
+        <div><label>Duração Tela 2 — Mão de Obra (s)</label><input type="number" id="cfgDur2" min="5" value="20"/></div>
+        <div><label>Zoom Tela 2 (%)</label><input type="number" id="cfgZoom2" min="50" max="200" value="100"/></div>
+      </div>
+      <div class="zoom-row">
+        <div><label>Duração Tela 3 — Operações (s)</label><input type="number" id="cfgDur3" min="5" value="20"/></div>
+        <div><label>Zoom Tela 3 (%)</label><input type="number" id="cfgZoom3" min="50" max="200" value="100"/></div>
+      </div>
+    </div>
+
+    <div class="cfg-box">
+      <h2>🟢 Painel de Segurança</h2>
+      <label>Data do primeiro dia da contagem (sem acidentes)</label>
+      <input type="date" id="cfgSafetyDate"/>
+      <div class="hint">O painel exibirá automaticamente "ESTAMOS HÁ (X) DIAS SEM ACIDENTES", calculado até a data de hoje. Sempre que ocorrer um acidente, atualize esta data para reiniciar a contagem.</div>
+    </div>
+
+    <div class="cfg-box">
+      <h2>🔑 Acesso — Sistema de Conferência (Produtividade)</h2>
+      <label>E-mail</label>
+      <input type="email" id="cfgSys1Email"/>
+      <label>Senha</label>
+      <input type="password" id="cfgSys1Pass"/>
+      <div class="hint">Credenciais usadas para ler os dados de Dashboard, Operações por Conferente, Paletes e o índice de Operações (Tela 3).</div>
+    </div>
+
+    <div class="cfg-box">
+      <h2>🔑 Acesso — Sistema de Mão de Obra (Tela 2)</h2>
+      <label>Login</label>
+      <input type="text" id="cfgSys2Login"/>
+      <label>Senha</label>
+      <input type="password" id="cfgSys2Pass"/>
+      <div class="hint">A Tela 2 entra automaticamente com este login, sem pedir senha — não precisa fazer nada manualmente. (A senha acima não é usada para autenticar, apenas identifica qual usuário cadastrado no sistema de mão de obra deve ficar logado.)</div>
+    </div>
+
+    <div class="cfg-box">
+      <h2>👷 Equipe Interna</h2>
+      <div class="row3">
+        <div><label>Nome</label><input type="text" id="teamNome" placeholder="Nome do colaborador"/></div>
+        <div><label>Função</label>
+          <select id="teamFuncao">
+            <option>Conferente</option>
+            <option>Ajudante</option>
+          </select>
+        </div>
+        <div><label>Operação</label><input type="text" id="teamOperacao" placeholder="Ex: Carga / Descarga"/></div>
+        <button class="small-btn" onclick="addTeamMember()">➕ Adicionar</button>
+      </div>
+      <div class="hint">A equipe já cadastrada aparece abaixo — no dia a dia, edite apenas o campo <b>Operação</b> de cada pessoa (a alteração é salva automaticamente). Use ✕ só se alguém sair da equipe.</div>
+      <div class="team-list">
+        <table>
+          <thead><tr><th>Nome</th><th>Função</th><th>Operação (editável)</th><th></th></tr></thead>
+          <tbody id="teamTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="cfg-box cfg-box-wide">
+      <h2>🚚 Operações Detalhadas</h2>
+
+      <label>Veículo / Operação — cadastrar novo</label>
+      <div class="row3" style="grid-template-columns:2fr auto;">
+        <div><input type="text" id="vehicleNovo" placeholder="Nome do veículo/operação"/></div>
+        <button class="small-btn" onclick="addVehicleOption()">➕ Cadastrar</button>
+      </div>
+      <div class="vehicle-tags" id="vehicleTags"></div>
+
+      <label style="margin-top:20px;">Adicionar operação ao quadro</label>
+      <div class="row3" style="grid-template-columns:2fr auto;">
+        <div><select id="opNovoVeiculo"></select></div>
+        <button class="small-btn" onclick="addOpRow()">➕ Adicionar ao quadro</button>
+      </div>
+
+      <div class="hint" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        <span>Edite Carga/Descarga, Conferente e Status direto na linha — salva automaticamente.</span>
+        <span class="ops-pct" id="opsPctCfg">0% concluído</span>
+      </div>
+
+      <div class="team-list" style="max-height:320px;">
+        <table>
+          <thead><tr><th>Veículo/Operação</th><th>Carga/Descarga</th><th>Conferente</th><th>Status</th><th></th></tr></thead>
+          <tbody id="opsCfgTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="cfg-footer">
+    <span class="saved-msg" id="savedMsg">Configurações salvas ✓</span>
+    <button class="ghost-btn" onclick="saveConfig(false)">💾 Salvar</button>
+    <button class="ghost-btn" onclick="previewDisplay()">👁 Visualizar (abre a exibição em outra aba)</button>
+    <button class="big-btn" onclick="saveConfig(true)">🖥 Salvar e Exibir em Tela Cheia</button>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   DASCH — CONFIG (cadastro/configurações). A exibição fica em display.html.
+   Tudo que é salvo aqui vai para o Firestore (coleção dasch_config,
+   documento "painel") no MESMO projeto Firebase do Sistema de Conferência.
+   O display.html escuta esse documento em tempo real — por isso a TV
+   nunca precisa de ninguém para configurar nada nela.
+===================================================================== */
+const LS_KEY = 'dasch_config_v1';
+const VEHICLE_DEFAULTS = ['RICARDO','GUILHERME','APH','FELIPE','EPP','EWJ','FRP','FVE','GXH','HBN','HWP','LZU','MIY','MKG','MKQ','MLU','MLX','MLM','NPJ','OKG','QHC','QIY','RYY','GOL','HGS','INVENTÁRIO','GRITSCH'];
+const STATUS_OPTIONS = ['URGÊNCIA','AGENTES','CONCLUÍDO','EM PROCESSO','NÃO FOI FEITO'];
+
+const SYS1_CONFIG = {
+  apiKey: "AIzaSyBp_ZfFiz1qWr4Gb4bc5h5mI1kHnjPwyCA",
+  authDomain: "conferenciaptx.firebaseapp.com",
+  projectId: "conferenciaptx",
+  storageBucket: "conferenciaptx.firebasestorage.app",
+  messagingSenderId: "78686885828",
+  appId: "1:78686885828:web:0d70d13e2abaf35ee23691"
+};
+const CONFIG_COLLECTION = 'dasch_config';
+const CONFIG_DOC = 'painel';
+
+function defaultConfig(){
+  const today = new Date().toISOString().slice(0,10);
+  return {
+    ticker: 'Bem-vindo à PortoEx! Trabalhe com segurança todos os dias.',
+    dur1: 20, dur2: 20, dur3: 20,
+    zoom1: 100, zoom2: 100, zoom3: 100,
+    safetyDate: today,
+    sys1Email: 'andre.luis@portoex.com.br',
+    sys1Pass: 'andre185166',
+    sys2Login: 'JOAOG',
+    sys2Pass: '123321',
+    team: [],
+    vehicleList: [...VEHICLE_DEFAULTS],
+    ops: []
+  };
+}
+
+let CFG = defaultConfig();
+
+function loadLocalCache(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw) CFG = Object.assign(defaultConfig(), JSON.parse(raw));
+  }catch(e){ /* mantém defaults */ }
+}
+
+function fillConfigForm(){
+  document.getElementById('cfgTicker').value = CFG.ticker;
+  document.getElementById('cfgDur1').value = CFG.dur1;
+  document.getElementById('cfgDur2').value = CFG.dur2;
+  document.getElementById('cfgDur3').value = CFG.dur3;
+  document.getElementById('cfgZoom1').value = CFG.zoom1;
+  document.getElementById('cfgZoom2').value = CFG.zoom2;
+  document.getElementById('cfgZoom3').value = CFG.zoom3;
+  document.getElementById('cfgSafetyDate').value = CFG.safetyDate;
+  document.getElementById('cfgSys1Email').value = CFG.sys1Email;
+  document.getElementById('cfgSys1Pass').value = CFG.sys1Pass;
+  document.getElementById('cfgSys2Login').value = CFG.sys2Login;
+  document.getElementById('cfgSys2Pass').value = CFG.sys2Pass;
+  renderTeamTable();
+  renderVehicleList();
+  renderOpVeiculoSelect();
+  renderOpsCfgTable();
+}
+
+function readConfigForm(){
+  CFG.ticker = document.getElementById('cfgTicker').value.trim() || defaultConfig().ticker;
+  CFG.dur1 = parseInt(document.getElementById('cfgDur1').value) || 20;
+  CFG.dur2 = parseInt(document.getElementById('cfgDur2').value) || 20;
+  CFG.dur3 = parseInt(document.getElementById('cfgDur3').value) || 20;
+  CFG.zoom1 = parseInt(document.getElementById('cfgZoom1').value) || 100;
+  CFG.zoom2 = parseInt(document.getElementById('cfgZoom2').value) || 100;
+  CFG.zoom3 = parseInt(document.getElementById('cfgZoom3').value) || 100;
+  CFG.safetyDate = document.getElementById('cfgSafetyDate').value || defaultConfig().safetyDate;
+  CFG.sys1Email = document.getElementById('cfgSys1Email').value.trim();
+  CFG.sys1Pass = document.getElementById('cfgSys1Pass').value;
+  CFG.sys2Login = document.getElementById('cfgSys2Login').value.trim() || defaultConfig().sys2Login;
+  CFG.sys2Pass = document.getElementById('cfgSys2Pass').value;
+}
+
+function addTeamMember(){
+  const nome = document.getElementById('teamNome').value.trim();
+  const funcao = document.getElementById('teamFuncao').value;
+  const operacao = document.getElementById('teamOperacao').value.trim();
+  if(!nome){ alert('Informe o nome do colaborador.'); return; }
+  CFG.team.push({nome, funcao, operacao});
+  document.getElementById('teamNome').value='';
+  document.getElementById('teamOperacao').value='';
+  renderTeamTable();
+  persistLocal();
+}
+function removeTeamMember(idx){
+  CFG.team.splice(idx,1);
+  renderTeamTable();
+  persistLocal();
+}
+function renderTeamTable(){
+  const body = document.getElementById('teamTableBody');
+  body.innerHTML = CFG.team.map((m,i)=>`
+    <tr>
+      <td>${escapeHtml(m.nome)}</td>
+      <td class="op-badge">${escapeHtml(m.funcao)}</td>
+      <td><input type="text" value="${escapeHtml(m.operacao||'')}" placeholder="Ex: Carga / Descarga" oninput="updateTeamOperacao(${i}, this.value)"/></td>
+      <td><button class="small-btn danger" onclick="removeTeamMember(${i})">✕</button></td>
+    </tr>`).join('') || '<tr><td colspan="4" style="color:#93a1bb;">Nenhum colaborador cadastrado ainda.</td></tr>';
+}
+function updateTeamOperacao(idx, value){
+  if(!CFG.team[idx]) return;
+  CFG.team[idx].operacao = value;
+  persistLocal();
+}
+function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* =====================================================================
+   OPERAÇÕES DETALHADAS — lista mestre de veículos/operações
+===================================================================== */
+function addVehicleOption(){
+  const input = document.getElementById('vehicleNovo');
+  const name = input.value.trim().toUpperCase();
+  if(!name){ alert('Informe o nome do veículo/operação.'); return; }
+  if(CFG.vehicleList.some(v=>v.toUpperCase()===name)){ alert('Esse veículo/operação já está cadastrado.'); input.value=''; return; }
+  CFG.vehicleList.push(name);
+  input.value='';
+  renderVehicleList();
+  renderOpVeiculoSelect();
+  persistLocal();
+}
+function removeVehicleOption(idx){
+  CFG.vehicleList.splice(idx,1);
+  renderVehicleList();
+  renderOpVeiculoSelect();
+  persistLocal();
+}
+function renderVehicleList(){
+  const wrap = document.getElementById('vehicleTags');
+  if(!wrap) return;
+  wrap.innerHTML = CFG.vehicleList.map((v,i)=>`<span class="vehicle-tag">${escapeHtml(v)}<button onclick="removeVehicleOption(${i})" title="Remover">✕</button></span>`).join('') || '<span class="hint">Nenhum cadastrado.</span>';
+}
+function renderOpVeiculoSelect(){
+  const sel = document.getElementById('opNovoVeiculo');
+  if(!sel) return;
+  sel.innerHTML = CFG.vehicleList.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('');
+}
+
+/* =====================================================================
+   OPERAÇÕES DETALHADAS — quadro de acompanhamento
+===================================================================== */
+function addOpRow(){
+  const sel = document.getElementById('opNovoVeiculo');
+  const veiculo = sel.value;
+  if(!veiculo){ alert('Cadastre ao menos um veículo/operação.'); return; }
+  CFG.ops.push({veiculo, tipo:'carga', conferente:'', status:'EM PROCESSO'});
+  renderOpsCfgTable();
+  persistLocal();
+}
+function removeOpRow(idx){
+  CFG.ops.splice(idx,1);
+  renderOpsCfgTable();
+  persistLocal();
+}
+function updateOpField(idx, field, value){
+  if(!CFG.ops[idx]) return;
+  CFG.ops[idx][field] = value;
+  updateOpsPctBadge('opsPctCfg');
+  persistLocal();
+}
+function conferenteOptionsHtml(selected){
+  const names = CFG.team.map(m=>m.nome).filter(Boolean);
+  let html = '<option value="">—</option>';
+  html += names.map(n=>`<option value="${escapeHtml(n)}" ${n===selected?'selected':''}>${escapeHtml(n)}</option>`).join('');
+  if(selected && !names.includes(selected)) html += `<option value="${escapeHtml(selected)}" selected>${escapeHtml(selected)}</option>`;
+  return html;
+}
+function statusOptionsHtml(selected){
+  return STATUS_OPTIONS.map(s=>`<option value="${s}" ${s===selected?'selected':''}>${s}</option>`).join('');
+}
+function renderOpsCfgTable(){
+  const body = document.getElementById('opsCfgTableBody');
+  if(!body) return;
+  body.innerHTML = CFG.ops.map((o,i)=>`
+    <tr>
+      <td>${escapeHtml(o.veiculo)}</td>
+      <td>
+        <div class="ops-cfg-radio">
+          <label><input type="radio" name="opTipo${i}" ${o.tipo==='carga'?'checked':''} onchange="updateOpField(${i},'tipo','carga')"/> Carga</label>
+          <label><input type="radio" name="opTipo${i}" ${o.tipo==='descarga'?'checked':''} onchange="updateOpField(${i},'tipo','descarga')"/> Descarga</label>
+          <label><input type="radio" name="opTipo${i}" ${o.tipo==='carga_descarga'?'checked':''} onchange="updateOpField(${i},'tipo','carga_descarga')"/> Carga+Descarga</label>
+        </div>
+      </td>
+      <td><select onchange="updateOpField(${i},'conferente',this.value)">${conferenteOptionsHtml(o.conferente)}</select></td>
+      <td><select onchange="updateOpField(${i},'status',this.value)">${statusOptionsHtml(o.status)}</select></td>
+      <td><button class="small-btn danger" onclick="removeOpRow(${i})">✕</button></td>
+    </tr>`).join('') || '<tr><td colspan="5" style="color:#93a1bb;">Nenhuma operação cadastrada ainda.</td></tr>';
+  updateOpsPctBadge('opsPctCfg');
+}
+function opsPercent(){
+  const total = CFG.ops.length;
+  const done = CFG.ops.filter(o=>o.status==='CONCLUÍDO').length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  return {done, total, pct};
+}
+function updateOpsPctBadge(elId){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  const {done,total,pct} = opsPercent();
+  el.textContent = total ? `${pct}% concluído (${done}/${total})` : '0% concluído';
+}
+
+/* =====================================================================
+   PERSISTÊNCIA — cache local (instantâneo) + nuvem (Firestore, fonte
+   de verdade para a TV)
+===================================================================== */
+function persistLocal(){
+  readConfigForm();
+  localStorage.setItem(LS_KEY, JSON.stringify(CFG));
+}
+
+let db1 = null;
+let cloudReady = false;
+function setCloudStatus(kind, msg){
+  const el = document.getElementById('cloudStatus');
+  el.className = 'cloud-status ' + kind;
+  el.textContent = msg;
+}
+
+function initFirebase(){
+  if(typeof firebase === 'undefined'){
+    setCloudStatus('fail', '⚠️ SDK do Firebase não carregou (verifique a internet). Configurações ficam só salvas localmente.');
+    return;
+  }
+  try{
+    const app1 = firebase.initializeApp(SYS1_CONFIG, 'sys1cfg');
+    const auth1 = app1.auth();
+    db1 = app1.firestore();
+
+    auth1.signInWithEmailAndPassword(CFG.sys1Email, CFG.sys1Pass)
+      .then(()=>{
+        cloudReady = true;
+        return db1.collection(CONFIG_COLLECTION).doc(CONFIG_DOC).get();
+      })
+      .then(doc=>{
+        if(doc && doc.exists){
+          CFG = Object.assign(defaultConfig(), doc.data());
+          fillConfigForm();
+        }
+        setCloudStatus('ok', '☁️ Conectado — o que você salvar aqui chega direto na TV.');
+      })
+      .catch(err=>{
+        cloudReady = false;
+        setCloudStatus('fail', '⚠️ Não foi possível conectar à nuvem (' + err.message + '). Verifique o login do Sistema de Conferência ou as regras do Firestore. As configurações continuam salvando localmente.');
+      });
+  }catch(e){
+    setCloudStatus('fail', '⚠️ Erro ao iniciar conexão com a nuvem: ' + e.message);
+  }
+}
+
+function saveToCloud(){
+  return new Promise((resolve)=>{
+    if(!db1 || !cloudReady){ resolve(false); return; }
+    db1.collection(CONFIG_COLLECTION).doc(CONFIG_DOC).set(CFG)
+      .then(()=>{ setCloudStatus('ok', '☁️ Sincronizado — a TV já recebeu esta configuração.'); resolve(true); })
+      .catch(err=>{ setCloudStatus('fail', '⚠️ Salvo só localmente — falha ao enviar para a nuvem (' + err.message + ').'); resolve(false); });
+  });
+}
+
+function saveConfig(goFullscreen){
+  readConfigForm();
+  localStorage.setItem(LS_KEY, JSON.stringify(CFG));
+  const msg = document.getElementById('savedMsg');
+  msg.classList.add('show');
+  setTimeout(()=>msg.classList.remove('show'), 2000);
+  saveToCloud().then(()=>{
+    if(goFullscreen){
+      window.location.href = 'display.html?fullscreen=1';
+    }
+  });
+}
+function previewDisplay(){
+  readConfigForm();
+  localStorage.setItem(LS_KEY, JSON.stringify(CFG));
+  saveToCloud().then(()=>{
+    window.open('display.html', '_blank');
+  });
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  loadLocalCache();
+  if(!CFG.safetyDate) CFG.safetyDate = defaultConfig().safetyDate;
+  fillConfigForm();
+  initFirebase();
+});
+</script>
+</body>
+</html>

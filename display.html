@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DASCH — Painel PortoEx (Exibição)</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+:root{
+  --verde: #1e8e3e;
+  --verde-escuro: #146428;
+  --amarelo: #f4c20d;
+  --navy: #0b1220;
+  --card: #17203a;
+  --texto: #eef2f8;
+  --muted: #93a1bb;
+  --vermelho: #e64545;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;background:#000;font-family:'Segoe UI',Arial,sans-serif;color:var(--texto);overflow:hidden;}
+button{font-family:inherit;cursor:pointer;}
+
+#displayScreen{height:100vh;width:100vw;position:relative;background:var(--navy);}
+.gear{position:absolute;top:10px;right:10px;z-index:999;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:17px;display:flex;align-items:center;justify-content:center;text-decoration:none;}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;transform-origin:top left;}
+.screen.active{display:flex;}
+
+/* ---- Screen 1 ---- */
+#screen1{padding:14px 18px;gap:12px;}
+
+.ticker-bar{height:6.5vh;min-height:46px;flex-shrink:0;background:var(--card);border-radius:10px;border:1px solid #26314f;display:flex;align-items:center;padding:0 18px;gap:16px;overflow:hidden;}
+.live-tag{display:flex;align-items:center;gap:7px;color:var(--vermelho);font-weight:800;font-size:.85vw;letter-spacing:1.5px;white-space:nowrap;flex-shrink:0;text-transform:uppercase;}
+.live-dot{width:9px;height:9px;border-radius:50%;background:var(--vermelho);animation:blink 1.4s infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.ticker-box{flex:1;height:100%;position:relative;overflow:hidden;display:flex;align-items:center;}
+.ticker-track{position:absolute;white-space:nowrap;font-size:2.7vw;font-weight:700;color:#fff;text-transform:uppercase;will-change:transform;animation:ticker-scroll linear infinite;}
+@keyframes ticker-scroll{from{transform:translateX(100%);}to{transform:translateX(-100%);}}
+
+.main-row{display:flex;gap:14px;flex:1;min-height:0;}
+.hero-box{border-radius:14px;border:1px solid #26314f;display:flex;flex-direction:column;overflow:hidden;}
+
+.col-left{flex:0 0 26%;height:100%;display:flex;flex-direction:column;gap:14px;}
+.clock-box{flex:1;background:var(--card);align-items:center;justify-content:center;}
+.clock-logo{max-width:60%;max-height:22%;object-fit:contain;margin-bottom:10px;}
+.clock-time{font-size:6.6vw;font-weight:800;letter-spacing:2px;color:var(--amarelo);font-variant-numeric:tabular-nums;line-height:1;}
+.clock-date{font-size:1.5vw;color:var(--muted);margin-top:16px;text-transform:capitalize;text-align:center;padding:0 10px;}
+
+.col-center{flex:0 0 34%;height:100%;display:flex;flex-direction:column;gap:14px;}
+.col-center .panel{flex:1;min-height:0;}
+
+.col-right{flex:1;height:100%;}
+
+.ops-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0;border-bottom:1px solid #26314f;padding-bottom:8px;}
+.ops-table{width:100%;border-collapse:collapse;font-size:1vw;table-layout:fixed;}
+.ops-table th{text-align:left;color:var(--muted);padding:6px 6px;position:sticky;top:0;background:var(--card);}
+.ops-table td{padding:7px 6px;border-bottom:1px solid #1e2740;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+.status-badge{display:inline-block;padding:3px 9px;border-radius:5px;font-size:.78vw;font-weight:800;color:#fff;white-space:nowrap;}
+.status-badge.st-urgencia{background:var(--vermelho);}
+.status-badge.st-agentes{background:#4dabf7;}
+.status-badge.st-concluido{background:#4caf50;}
+.status-badge.st-processo{background:#ff9800;}
+.status-badge.st-naofeito{background:#5c6478;}
+
+.safety-wrap{flex:0 0 auto;border:none;}
+.safety-title-bar{background:var(--verde-escuro);color:#fff;padding:12px 14px;text-align:center;font-weight:800;font-size:1.1vw;letter-spacing:.4px;line-height:1.3;}
+.safety-panel{background:var(--verde);padding:26px 14px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.safety-status{color:#fff;font-weight:900;font-size:1.4vw;line-height:1.2;}
+.safety-status .num{font-size:3.2vw;display:block;line-height:1.05;}
+.safety-footer{background:var(--verde-escuro);padding:10px 12px;text-align:center;color:#fff;font-weight:700;font-size:.9vw;letter-spacing:.4px;}
+
+.panel{background:var(--card);border-radius:14px;border:1px solid #26314f;padding:14px 16px;display:flex;flex-direction:column;min-height:0;}
+.panel h3{margin:0 0 10px;font-size:1vw;color:var(--amarelo);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #26314f;padding-bottom:8px;flex-shrink:0;}
+.panel .scroll{overflow-y:auto;flex:1;min-height:0;}
+.team-box .scroll{overflow:hidden;}
+
+.team-table{width:100%;border-collapse:collapse;font-size:1vw;table-layout:fixed;}
+.team-table th{text-align:left;color:var(--muted);padding:6px 6px;position:sticky;top:0;background:var(--card);}
+.team-table td{padding:7px 6px;border-bottom:1px solid #1e2740;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+.cards-row{display:flex;gap:10px;flex-shrink:0;}
+.stat-card{flex:1;background:#0f1626;border-radius:10px;padding:7px 12px;border:1px solid #26314f;}
+.stat-card .lbl{font-size:.68vw;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.stat-card .val{font-size:1.5vw;font-weight:800;margin-top:2px;}
+.stat-card.ok .val{color:#4caf50;}
+.stat-card.warn .val{color:#ff9800;}
+.stat-card.bad .val{color:var(--vermelho);}
+.stat-card.info .val{color:#4dabf7;}
+.stat-card.pal .val{color:var(--amarelo);}
+
+.bar-item{margin-bottom:11px;}
+.bar-item .bl{display:flex;justify-content:space-between;font-size:1vw;margin-bottom:4px;}
+.bar-item .bl .n{font-weight:700;}
+.bar-item .bl .c{color:var(--amarelo);font-weight:700;}
+.bar-track{background:#0f1626;border-radius:6px;height:12px;overflow:hidden;}
+.bar-fill{background:linear-gradient(90deg,#f4c20d,#ff9800);height:100%;border-radius:6px;}
+
+.empty-msg{color:var(--muted);font-size:.9vw;padding:20px;text-align:center;}
+
+/* ---- Screen 2 (Mão de obra) ---- */
+#screen2{padding:0;background:#111;}
+#s2Frame{width:100%;height:100%;border:0;display:block;}
+</style>
+</head>
+<body>
+
+<script>
+/* =====================================================================
+   SESSÃO TELA 2 — evita pedir login toda vez (ver comentário completo
+   no listenSys2 mais abaixo). Roda cedo para já gravar a sessão antes
+   do iframe da Tela 2 carregar.
+===================================================================== */
+(function seedSys2Session(){
+  try{
+    const raw = localStorage.getItem('dasch_config_v1');
+    const cfg = raw ? JSON.parse(raw) : {};
+    const login = (cfg.sys2Login || 'JOAOG').trim();
+    if(login){
+      localStorage.setItem('portoex_tv_session', JSON.stringify({login}));
+    }
+  }catch(e){ console.error('Nao foi possivel preparar a sessao da Tela 2:', e.message); }
+})();
+</script>
+
+<div id="displayScreen">
+  <a class="gear" href="config.html" title="Configurações">⚙</a>
+
+  <!-- SCREEN 1: Produtividade + Segurança -->
+  <div id="screen1" class="screen active">
+    <div class="ticker-bar">
+      <div class="live-tag"><span class="live-dot"></span>Ao Vivo</div>
+      <div class="ticker-box">
+        <div class="ticker-track" id="tickerTrack"></div>
+      </div>
+    </div>
+
+    <div class="cards-row">
+      <div class="stat-card info"><div class="lbl">Operações Hoje</div><div class="val" id="cardOpsHoje">0</div></div>
+      <div class="stat-card ok"><div class="lbl">Concluídas</div><div class="val" id="cardConcluidas">0</div></div>
+      <div class="stat-card bad"><div class="lbl">Discrepâncias</div><div class="val" id="cardDiscrepancias">0</div></div>
+      <div class="stat-card warn"><div class="lbl">Conferentes Ativos</div><div class="val" id="cardConferentes">0</div></div>
+      <div class="stat-card pal"><div class="lbl">Paletes Hoje</div><div class="val" id="cardPaletes">0</div></div>
+    </div>
+
+    <div class="main-row">
+      <div class="col-left">
+        <div class="clock-box hero-box">
+          <img class="clock-logo" src="logo-portoex.png" alt="PortoEx" onerror="this.style.display='none'"/>
+          <div class="clock-time" id="clockTime">00:00</div>
+          <div class="clock-date" id="clockDate">—</div>
+        </div>
+        <div class="safety-wrap hero-box">
+          <div class="safety-title-bar">O CUIDADO DE UM É A SEGURANÇA DE TODOS</div>
+          <div class="safety-panel">
+            <div class="safety-status">ESTAMOS HÁ<span class="num" id="safetyDays">0</span>DIAS SEM ACIDENTES</div>
+          </div>
+          <div class="safety-footer">COLABORE PARA MELHORAR ESSE ÍNDICE</div>
+        </div>
+      </div>
+
+      <div class="col-center">
+        <div class="panel team-box hero-box">
+          <h3>Equipe Interna</h3>
+          <div class="scroll">
+            <table class="team-table" id="teamDisplayTable">
+              <thead><tr><th>Nome</th><th>Função</th><th>Operação</th></tr></thead>
+              <tbody id="teamDisplayBody"><tr><td colspan="3" class="empty-msg">Nenhum colaborador cadastrado</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="panel hero-box">
+          <h3>Operações por Conferente</h3>
+          <div class="scroll" id="chartConferente"></div>
+        </div>
+      </div>
+
+      <div class="col-right">
+        <div class="panel hero-box" style="height:100%;">
+          <div class="ops-panel-head">
+            <h3 style="margin:0;border:0;padding:0;">Operações Detalhadas</h3>
+            <span class="ops-pct" id="opsPct">0%</span>
+          </div>
+          <div class="scroll">
+            <table class="ops-table" id="opsDisplayTable">
+              <thead><tr><th>Veículo/Operação</th><th>Carga/Descarga</th><th>Conferente</th><th>Status</th></tr></thead>
+              <tbody id="opsDisplayBody"><tr><td colspan="4" class="empty-msg">Nenhuma operação cadastrada</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: Mão de Obra -->
+  <div id="screen2" class="screen">
+    <iframe id="s2Frame" src="mao-de-obra.html" title="Mão de Obra Terceirizada" allow="fullscreen"></iframe>
+  </div>
+
+  <!-- SCREEN 3: Operações — índice ao vivo do Sistema de Conferência (Produtividade) -->
+  <div id="screen3" class="screen" style="padding:14px 18px;">
+    <div class="panel hero-box" style="height:100%;">
+      <div class="ops-panel-head">
+        <h3 style="margin:0;border:0;padding:0;">Operações — Sistema de Conferência</h3>
+        <span class="ops-pct" id="opsLiveCount">0 hoje</span>
+      </div>
+      <div class="scroll" style="flex:1;overflow-y:auto;">
+        <table class="ops-table" id="opsLiveTable">
+          <thead><tr><th>Data/Hora</th><th>Placa</th><th>Tipo</th><th>Conferente</th><th>Status</th></tr></thead>
+          <tbody id="opsLiveBody"><tr><td colspan="5" class="empty-msg">Sem operações hoje</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   DASCH — EXIBIÇÃO (arquivo dedicado para a TV).
+   Este arquivo NÃO tem tela de configuração. Ele lê a configuração do
+   Firestore (coleção dasch_config, documento "painel") em tempo real —
+   qualquer alteração salva em config.html aparece aqui sozinha, sem
+   precisar tocar na TV. Enquanto a nuvem não responde, usa os valores
+   padrão abaixo para não ficar com a tela em branco.
+===================================================================== */
+const LS_KEY = 'dasch_config_v1';
+const STATUS_OPTIONS = ['URGÊNCIA','AGENTES','CONCLUÍDO','EM PROCESSO','NÃO FOI FEITO'];
+
+function defaultConfig(){
+  const today = new Date().toISOString().slice(0,10);
+  return {
+    ticker: 'Bem-vindo à PortoEx! Trabalhe com segurança todos os dias.',
+    dur1: 20, dur2: 20, dur3: 20,
+    zoom1: 100, zoom2: 100, zoom3: 100,
+    safetyDate: today,
+    sys1Email: 'andre.luis@portoex.com.br',
+    sys1Pass: 'andre185166',
+    sys2Login: 'JOAOG',
+    sys2Pass: '123321',
+    team: [],
+    vehicleList: [],
+    ops: []
+  };
+}
+let CFG = defaultConfig();
+
+/* Tenta usar um cache local (útil se esta TV já rodou o painel antigo
+   em arquivo único) enquanto a nuvem não responde. */
+(function seedFromLocalCache(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw) CFG = Object.assign(defaultConfig(), JSON.parse(raw));
+  }catch(e){ /* ignora */ }
+})();
+
+function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function normalizeStr(s){ return (s||'').toString().normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase(); }
+function statusClass(status){
+  const s = normalizeStr(status);
+  if(s.includes('URGEN')) return 'st-urgencia';
+  if(s.includes('AGENTE')) return 'st-agentes';
+  if(s.includes('CONCLU')) return 'st-concluido';
+  if(s.includes('PROCESSO') || s.includes('ANDAMENTO')) return 'st-processo';
+  if(s.includes('NAO FOI') || s.includes('PENDENTE')) return 'st-naofeito';
+  return 'st-processo';
+}
+function tipoLabel(t){
+  if(t==='descarga') return 'Descarga';
+  if(t==='carga_descarga') return 'Carga + Descarga';
+  return 'Carga';
+}
+function opsPercent(){
+  const total = (CFG.ops||[]).length;
+  const done = (CFG.ops||[]).filter(o=>o.status==='CONCLUÍDO').length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  return {done, total, pct};
+}
+
+/* =====================================================================
+   RENDERIZAÇÃO — chamada sempre que CFG muda (seja no primeiro load
+   com os padrões, seja a cada atualização vinda do Firestore)
+===================================================================== */
+function renderAll(){
+  applyTicker();
+  applySafetyCounter();
+  renderTeamDisplay();
+  renderOpsDetailPanel();
+  applyZoom();
+}
+
+function applyTicker(){
+  const track = document.getElementById('tickerTrack');
+  track.textContent = CFG.ticker;
+  const chars = Math.max(CFG.ticker.length, 20);
+  track.style.animationDuration = Math.max(14, chars*0.28) + 's';
+}
+
+function applySafetyCounter(){
+  const start = new Date(CFG.safetyDate + 'T00:00:00');
+  const now = new Date();
+  const diffDays = Math.max(0, Math.floor((now - start) / 86400000));
+  document.getElementById('safetyDays').textContent = diffDays;
+}
+
+function renderTeamDisplay(){
+  const body = document.getElementById('teamDisplayBody');
+  const team = CFG.team || [];
+  if(!team.length){
+    body.innerHTML = '<tr><td colspan="3" class="empty-msg">Nenhum colaborador cadastrado</td></tr>';
+    return;
+  }
+  body.innerHTML = team.map(m=>`<tr><td>${escapeHtml(m.nome)}</td><td>${escapeHtml(m.funcao)}</td><td>${escapeHtml(m.operacao||'—')}</td></tr>`).join('');
+  fitTeamTable();
+}
+function fitTeamTable(){
+  const wrap = document.querySelector('#screen1 .team-box .scroll');
+  const table = document.getElementById('teamDisplayTable');
+  const thead = table ? table.querySelector('thead') : null;
+  if(!wrap || !table || !thead) return;
+  requestAnimationFrame(()=>{
+    const rows = (CFG.team||[]).length;
+    if(!rows) return;
+    const totalH = wrap.clientHeight;
+    const headH = thead.getBoundingClientRect().height || 22;
+    const perRow = Math.max(10, (totalH - headH) / rows);
+    const vPad = Math.max(0.5, Math.min(7, perRow * 0.22));
+    const fontPx = Math.max(8, Math.min(20, perRow - vPad*2 - 2));
+    table.querySelectorAll('td,th').forEach(c=>{ c.style.padding = vPad.toFixed(1)+'px 6px'; });
+    table.style.fontSize = fontPx.toFixed(1) + 'px';
+  });
+}
+window.addEventListener('resize', ()=>{ if((CFG.team||[]).length) fitTeamTable(); });
+
+function renderOpsDetailPanel(){
+  const body = document.getElementById('opsDisplayBody');
+  const {done,total,pct} = opsPercent();
+  const pctEl = document.getElementById('opsPct');
+  if(pctEl) pctEl.textContent = total ? `${pct}% (${done}/${total})` : '0%';
+  if(!body) return;
+  const ops = CFG.ops || [];
+  if(!ops.length){
+    body.innerHTML = '<tr><td colspan="4" class="empty-msg">Nenhuma operação cadastrada</td></tr>';
+    return;
+  }
+  body.innerHTML = ops.map(o=>`
+    <tr>
+      <td>${escapeHtml(o.veiculo)}</td>
+      <td>${tipoLabel(o.tipo)}</td>
+      <td>${escapeHtml(o.conferente||'—')}</td>
+      <td><span class="status-badge ${statusClass(o.status)}">${escapeHtml(o.status)}</span></td>
+    </tr>`).join('');
+  fitOpsTable();
+}
+function fitOpsTable(){
+  const table = document.getElementById('opsDisplayTable');
+  const wrap = table ? table.closest('.scroll') : null;
+  const thead = table ? table.querySelector('thead') : null;
+  if(!wrap || !table || !thead) return;
+  requestAnimationFrame(()=>{
+    const rows = (CFG.ops||[]).length;
+    if(!rows) return;
+    const totalH = wrap.clientHeight;
+    const headH = thead.getBoundingClientRect().height || 22;
+    const perRow = Math.max(10, (totalH - headH) / rows);
+    const vPad = Math.max(0.5, Math.min(7, perRow * 0.22));
+    const fontPx = Math.max(8, Math.min(18, perRow - vPad*2 - 2));
+    table.querySelectorAll('td,th').forEach(c=>{ c.style.padding = vPad.toFixed(1)+'px 6px'; });
+    table.style.fontSize = fontPx.toFixed(1) + 'px';
+  });
+}
+window.addEventListener('resize', ()=>{ if((CFG.ops||[]).length) fitOpsTable(); });
+
+/* Zoom por tela — CSS "zoom" (100% = tamanho normal). Ajustável em
+   config.html; útil quando a TV física exige um pouco mais/menos de
+   escala em alguma das telas. */
+function applyZoom(){
+  const z1 = document.getElementById('screen1');
+  const z2 = document.getElementById('screen2');
+  const z3 = document.getElementById('screen3');
+  if(z1) z1.style.zoom = (CFG.zoom1 || 100) + '%';
+  if(z2) z2.style.zoom = (CFG.zoom2 || 100) + '%';
+  if(z3) z3.style.zoom = (CFG.zoom3 || 100) + '%';
+}
+
+function startClock(){
+  function tick(){
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('clockTime').textContent = `${hh}:${mm}`;
+    document.getElementById('clockDate').textContent = now.toLocaleDateString('pt-BR', {weekday:'long', day:'2-digit', month:'long', year:'numeric'});
+    applySafetyCounter();
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+let rotationTimer = null;
+function startRotation(){
+  if(rotationTimer) clearTimeout(rotationTimer);
+  let current = 1;
+  function showScreen(n){
+    document.getElementById('screen1').classList.toggle('active', n===1);
+    document.getElementById('screen2').classList.toggle('active', n===2);
+    document.getElementById('screen3').classList.toggle('active', n===3);
+    const dur = (n===1 ? CFG.dur1 : n===2 ? CFG.dur2 : CFG.dur3) * 1000;
+    rotationTimer = setTimeout(()=>{ current = current===3 ? 1 : current+1; showScreen(current); }, dur);
+  }
+  showScreen(1);
+}
+
+/* =====================================================================
+   FIREBASE — autentica com as credenciais do Sistema de Conferência
+   (usadas também para ler a configuração ao vivo do Firestore) e
+   escuta as operações do dia + o documento de configuração.
+===================================================================== */
+const SYS1_CONFIG = {
+  apiKey: "AIzaSyBp_ZfFiz1qWr4Gb4bc5h5mI1kHnjPwyCA",
+  authDomain: "conferenciaptx.firebaseapp.com",
+  projectId: "conferenciaptx",
+  storageBucket: "conferenciaptx.firebasestorage.app",
+  messagingSenderId: "78686885828",
+  appId: "1:78686885828:web:0d70d13e2abaf35ee23691"
+};
+const CONFIG_COLLECTION = 'dasch_config';
+const CONFIG_DOC = 'painel';
+
+let db1 = null;
+let auth1 = null;
+let currentAuthedEmail = null;
+let fbInitialized = false;
+
+function initFirebase(){
+  if(fbInitialized) return;
+  fbInitialized = true;
+
+  if(typeof firebase === 'undefined'){
+    console.error('SDK do Firebase não carregou (verifique conexão com a internet). Exibindo com dados padrão/cache local.');
+    return;
+  }
+
+  try{
+    const app1 = firebase.initializeApp(SYS1_CONFIG, 'sys1');
+    auth1 = app1.auth();
+    db1 = app1.firestore();
+    signInAndListen(CFG.sys1Email, CFG.sys1Pass);
+  }catch(e){ console.error('Erro ao iniciar Firebase:', e.message); }
+}
+
+function signInAndListen(email, pass){
+  auth1.signInWithEmailAndPassword(email, pass)
+    .then(()=>{
+      currentAuthedEmail = email;
+      listenConfig();
+      listenOperacoesEDiscrepancias();
+    })
+    .catch(err=>{
+      console.error('Erro ao logar no Sistema de Conferência:', err.message);
+    });
+}
+
+/* Escuta o documento de configuração em tempo real — é isso que faz a
+   TV nunca precisar de ninguém para configurar nada nela. */
+function listenConfig(){
+  db1.collection(CONFIG_COLLECTION).doc(CONFIG_DOC).onSnapshot(doc=>{
+    if(!doc.exists) return;
+    const data = doc.data();
+    CFG = Object.assign(defaultConfig(), data);
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(CFG)); }catch(e){}
+    renderAll();
+    // Se o login do Sistema de Conferência mudou, reautentica sem
+    // precisar recarregar a página.
+    if(CFG.sys1Email && CFG.sys1Email !== currentAuthedEmail){
+      signInAndListen(CFG.sys1Email, CFG.sys1Pass);
+    }
+  }, err=> console.error('config snapshot error:', err.message));
+}
+
+function todayDataRefBR(){
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
+function listenOperacoesEDiscrepancias(){
+  const today = todayDataRefBR();
+
+  db1.collection('operacoes').where('dataRef','==', today)
+    .onSnapshot(snap=>{
+      const docs = snap.docs.map(d=>d.data());
+      renderSys1(docs);
+      renderOpsLive(docs);
+    }, err=> console.error('operacoes snapshot error:', err.message));
+
+  db1.collection('discrepancias').onSnapshot(snap=>{
+    let pendentes = 0;
+    snap.docs.forEach(d=>{
+      const st = (d.data().status || '').toUpperCase();
+      if(st !== 'RESOLVIDA' && st !== 'RESOLVIDO') pendentes++;
+    });
+    document.getElementById('cardDiscrepancias').textContent = pendentes;
+  }, err=> console.error('discrepancias snapshot error:', err.message));
+}
+
+function renderSys1(docs){
+  const opsHoje = docs.length;
+  const concluidas = docs.filter(d=>(d.status||'').toUpperCase()==='CONCLUIDA').length;
+  const conferentesSet = new Set(docs.map(d=>d.conferenteId).filter(Boolean));
+  let paletesTotal = 0;
+  docs.forEach(d=> (d.paletes||[]).forEach(p=> paletesTotal += Number(p.quantidade)||0));
+
+  document.getElementById('cardOpsHoje').textContent = opsHoje;
+  document.getElementById('cardConcluidas').textContent = concluidas;
+  document.getElementById('cardConferentes').textContent = conferentesSet.size;
+  document.getElementById('cardPaletes').textContent = paletesTotal;
+
+  const byConferente = {};
+  docs.forEach(d=>{
+    const cn = d.conferenteNome || 'Não identificado';
+    byConferente[cn] = (byConferente[cn]||0) + 1;
+  });
+  renderBarList('chartConferente', byConferente);
+}
+
+function renderBarList(containerId, obj){
+  const el = document.getElementById(containerId);
+  const entries = Object.entries(obj).sort((a,b)=>b[1]-a[1]).slice(0,24);
+  if(!entries.length){ el.innerHTML = '<div class="empty-msg">Sem operações hoje</div>'; return; }
+  const max = entries[0][1];
+  el.innerHTML = entries.map(([name,count])=>`
+    <div class="bar-item">
+      <div class="bl"><span class="n">${escapeHtml(name)}</span><span class="c">${count}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(count/max*100).toFixed(0)}%"></div></div>
+    </div>`).join('');
+}
+
+/* =====================================================================
+   TELA 3 — ÍNDICE DE OPERAÇÕES (ao vivo, Sistema de Conferência)
+===================================================================== */
+function fieldFallback(d, keys){
+  for(const k of keys){ if(d[k]!==undefined && d[k]!==null && d[k]!=='') return d[k]; }
+  return '';
+}
+function formatDataHora(d){
+  const raw = fieldFallback(d, ['dataHora','horario','hora','criadoEm','timestamp','createdAt']);
+  if(!raw) return d.dataRef || '—';
+  try{
+    let dt;
+    if(raw && typeof raw.toDate === 'function') dt = raw.toDate();
+    else dt = new Date(raw);
+    if(isNaN(dt.getTime())) return String(raw);
+    const dd = String(dt.getDate()).padStart(2,'0');
+    const mm = String(dt.getMonth()+1).padStart(2,'0');
+    const hh = String(dt.getHours()).padStart(2,'0');
+    const mi = String(dt.getMinutes()).padStart(2,'0');
+    return `${dd}/${mm} ${hh}:${mi}`;
+  }catch(e){ return String(raw); }
+}
+function renderOpsLive(docs){
+  const body = document.getElementById('opsLiveBody');
+  const countEl = document.getElementById('opsLiveCount');
+  if(countEl) countEl.textContent = `${docs.length} hoje`;
+  if(!body) return;
+  if(!docs.length){ body.innerHTML = '<tr><td colspan="5" class="empty-msg">Sem operações hoje</td></tr>'; return; }
+  body.innerHTML = docs.map(d=>{
+    const placa = fieldFallback(d, ['placa','veiculo','placaVeiculo']) || '—';
+    const tipo = fieldFallback(d, ['tipo','tipoOperacao','operacao']) || '—';
+    const conferente = d.conferenteNome || fieldFallback(d, ['conferente']) || '—';
+    const status = (d.status || '—').toString();
+    return `<tr>
+      <td>${escapeHtml(formatDataHora(d))}</td>
+      <td>${escapeHtml(placa)}</td>
+      <td>${escapeHtml(tipo)}</td>
+      <td>${escapeHtml(conferente)}</td>
+      <td><span class="status-badge ${statusClass(status)}">${escapeHtml(status)}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+/* =====================================================================
+   TELA CHEIA — tentado ao abrir com ?fullscreen=1 (link vindo do
+   botão "Salvar e Exibir em Tela Cheia" em config.html). Navegadores
+   podem bloquear tela cheia automática sem clique; por isso também
+   ativamos no primeiro toque/clique na própria tela, como reforço.
+===================================================================== */
+function goFullscreen(){
+  const el = document.documentElement;
+  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+  if(req) req.call(el).catch(()=>{});
+}
+function setupFullscreen(){
+  const params = new URLSearchParams(window.location.search);
+  if(params.get('fullscreen') === '1'){
+    goFullscreen();
+    const retry = ()=>{ if(!document.fullscreenElement){ goFullscreen(); } document.removeEventListener('click', retry); };
+    document.addEventListener('click', retry, {once:true});
+  }
+}
+
+/* =====================================================================
+   INIT
+===================================================================== */
+document.addEventListener('DOMContentLoaded', ()=>{
+  if(!CFG.safetyDate) CFG.safetyDate = defaultConfig().safetyDate;
+  renderAll();
+  startClock();
+  startRotation();
+  setupFullscreen();
+  initFirebase();
+});
+</script>
+</body>
+</html>
