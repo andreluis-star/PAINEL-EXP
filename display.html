@@ -47,10 +47,8 @@ button{font-family:inherit;cursor:pointer;}
 .clock-time{font-size:6.6vw;font-weight:800;letter-spacing:2px;color:var(--amarelo);font-variant-numeric:tabular-nums;line-height:1;}
 .clock-date{font-size:1.5vw;color:var(--muted);margin-top:16px;text-transform:capitalize;text-align:center;padding:0 10px;}
 
-.col-center{flex:0 0 34%;height:100%;display:flex;flex-direction:column;gap:14px;}
+.col-center{flex:1;height:100%;display:flex;flex-direction:column;gap:14px;}
 .col-center .panel{flex:1;min-height:0;}
-
-.col-right{flex:1;height:100%;}
 
 .ops-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0;border-bottom:1px solid #26314f;padding-bottom:8px;}
 .ops-table{width:100%;border-collapse:collapse;font-size:1vw;table-layout:fixed;}
@@ -175,21 +173,6 @@ button{font-family:inherit;cursor:pointer;}
           <div class="scroll" id="chartConferente"></div>
         </div>
       </div>
-
-      <div class="col-right">
-        <div class="panel hero-box" style="height:100%;">
-          <div class="ops-panel-head">
-            <h3 style="margin:0;border:0;padding:0;">Operações Detalhadas</h3>
-            <span class="ops-pct" id="opsPct">0%</span>
-          </div>
-          <div class="scroll">
-            <table class="ops-table" id="opsDisplayTable">
-              <thead><tr><th>Veículo/Operação</th><th>Carga/Descarga</th><th>Conferente</th><th>Status</th></tr></thead>
-              <tbody id="opsDisplayBody"><tr><td colspan="4" class="empty-msg">Nenhuma operação cadastrada</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -198,9 +181,21 @@ button{font-family:inherit;cursor:pointer;}
     <iframe id="s2Frame" src="mao-de-obra.html" title="Mão de Obra Terceirizada" allow="fullscreen"></iframe>
   </div>
 
-  <!-- SCREEN 3: Operações — índice ao vivo do Sistema de Conferência (Produtividade) -->
-  <div id="screen3" class="screen" style="padding:14px 18px;">
-    <div class="panel hero-box" style="height:100%;">
+  <!-- SCREEN 3: Operações Detalhadas (topo) + índice ao vivo do Sistema de Conferência (base) -->
+  <div id="screen3" class="screen" style="padding:14px 18px;gap:14px;">
+    <div class="panel hero-box" style="flex:1;min-height:0;">
+      <div class="ops-panel-head">
+        <h3 style="margin:0;border:0;padding:0;">Operações Detalhadas</h3>
+        <span class="ops-pct" id="opsPct">0%</span>
+      </div>
+      <div class="scroll">
+        <table class="ops-table" id="opsDisplayTable">
+          <thead><tr><th>Veículo/Operação</th><th>Operação</th><th>Carga/Descarga</th><th>Conferente</th><th>Status</th></tr></thead>
+          <tbody id="opsDisplayBody"><tr><td colspan="5" class="empty-msg">Nenhuma operação cadastrada</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel hero-box" style="flex:1;min-height:0;">
       <div class="ops-panel-head">
         <h3 style="margin:0;border:0;padding:0;">Operações — Sistema de Conferência</h3>
         <span class="ops-pct" id="opsLiveCount">0 hoje</span>
@@ -340,12 +335,13 @@ function renderOpsDetailPanel(){
   if(!body) return;
   const ops = CFG.ops || [];
   if(!ops.length){
-    body.innerHTML = '<tr><td colspan="4" class="empty-msg">Nenhuma operação cadastrada</td></tr>';
+    body.innerHTML = '<tr><td colspan="5" class="empty-msg">Nenhuma operação cadastrada</td></tr>';
     return;
   }
   body.innerHTML = ops.map(o=>`
     <tr>
       <td>${escapeHtml(o.veiculo)}</td>
+      <td>${escapeHtml(o.operacao||'—')}</td>
       <td>${tipoLabel(o.tipo)}</td>
       <td>${escapeHtml(o.conferente||'—')}</td>
       <td><span class="status-badge ${statusClass(o.status)}">${escapeHtml(o.status)}</span></td>
