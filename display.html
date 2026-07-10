@@ -47,7 +47,7 @@ button{font-family:inherit;cursor:pointer;}
 .clock-time{font-size:6.6vw;font-weight:800;letter-spacing:2px;color:var(--amarelo);font-variant-numeric:tabular-nums;line-height:1;}
 .clock-date{font-size:1.5vw;color:var(--muted);margin-top:16px;text-transform:capitalize;text-align:center;padding:0 10px;}
 
-.col-center{flex:1;height:100%;display:flex;flex-direction:column;gap:14px;}
+.col-center{flex:1;height:100%;display:flex;flex-direction:row;gap:14px;}
 .col-center .panel{flex:1;min-height:0;}
 
 .ops-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0;border-bottom:1px solid #26314f;padding-bottom:8px;}
@@ -348,35 +348,57 @@ function renderOpsDetailPanel(){
     </tr>`).join('');
   fitOpsTable();
 }
-function fitOpsTable(){
-  const table = document.getElementById('opsDisplayTable');
+/* Ajuste de fonte/espaçamento por tabela — usada tanto pela tabela de
+   Operações Detalhadas quanto pela tabela ao vivo do Sistema de
+   Conferência, para as duas manterem a MESMA escala visual na Tela 3
+   (mesmo algoritmo, mesmos limites de fonte). */
+function fitTableRows(tableId, rowCount){
+  const table = document.getElementById(tableId);
   const wrap = table ? table.closest('.scroll') : null;
   const thead = table ? table.querySelector('thead') : null;
-  if(!wrap || !table || !thead) return;
+  if(!wrap || !table || !thead || !rowCount) return;
   requestAnimationFrame(()=>{
-    const rows = (CFG.ops||[]).length;
-    if(!rows) return;
     const totalH = wrap.clientHeight;
     const headH = thead.getBoundingClientRect().height || 22;
-    const perRow = Math.max(10, (totalH - headH) / rows);
+    const perRow = Math.max(10, (totalH - headH) / rowCount);
     const vPad = Math.max(0.5, Math.min(7, perRow * 0.22));
     const fontPx = Math.max(8, Math.min(18, perRow - vPad*2 - 2));
     table.querySelectorAll('td,th').forEach(c=>{ c.style.padding = vPad.toFixed(1)+'px 6px'; });
     table.style.fontSize = fontPx.toFixed(1) + 'px';
   });
 }
-window.addEventListener('resize', ()=>{ if((CFG.ops||[]).length) fitOpsTable(); });
+function fitOpsTable(){ fitTableRows('opsDisplayTable', (CFG.ops||[]).length); }
+let lastLiveDocsCount = 0;
+function fitLiveTable(){ fitTableRows('opsLiveTable', lastLiveDocsCount); }
+window.addEventListener('resize', ()=>{
+  if((CFG.ops||[]).length) fitOpsTable();
+  if(lastLiveDocsCount) fitLiveTable();
+});
 
 /* Zoom por tela — CSS "zoom" (100% = tamanho normal). Ajustável em
    config.html; útil quando a TV física exige um pouco mais/menos de
-   escala em alguma das telas. */
+   escala em alguma das telas.
+   A Tela 2 é uma página externa carregada em <iframe> (mao-de-obra.html):
+   aplicar "zoom" no <div> que envolve o iframe não tem efeito nenhum
+   sobre o conteúdo renderizado dentro dele, porque o iframe é um
+   documento HTML independente com seu próprio layout. Por isso o zoom
+   da Tela 2 é aplicado diretamente no <body> do documento carregado
+   dentro do iframe (mesma origem, então dá para acessar o
+   contentDocument). */
 function applyZoom(){
   const z1 = document.getElementById('screen1');
-  const z2 = document.getElementById('screen2');
   const z3 = document.getElementById('screen3');
   if(z1) z1.style.zoom = (CFG.zoom1 || 100) + '%';
-  if(z2) z2.style.zoom = (CFG.zoom2 || 100) + '%';
   if(z3) z3.style.zoom = (CFG.zoom3 || 100) + '%';
+  applyScreen2Zoom();
+}
+function applyScreen2Zoom(){
+  const frame = document.getElementById('s2Frame');
+  if(!frame) return;
+  try{
+    const doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+    if(doc && doc.body) doc.body.style.zoom = (CFG.zoom2 || 100) + '%';
+  }catch(e){ /* conteúdo ainda não carregou ou é de outra origem — ignora */ }
 }
 
 function startClock(){
@@ -558,6 +580,7 @@ function renderOpsLive(docs){
   const body = document.getElementById('opsLiveBody');
   const countEl = document.getElementById('opsLiveCount');
   if(countEl) countEl.textContent = `${docs.length} hoje`;
+  lastLiveDocsCount = docs.length;
   if(!body) return;
   if(!docs.length){ body.innerHTML = '<tr><td colspan="5" class="empty-msg">Sem operações hoje</td></tr>'; return; }
   body.innerHTML = docs.map(d=>{
@@ -573,6 +596,7 @@ function renderOpsLive(docs){
       <td><span class="status-badge ${statusClass(status)}">${escapeHtml(status)}</span></td>
     </tr>`;
   }).join('');
+  fitLiveTable();
 }
 
 /* =====================================================================
@@ -605,6 +629,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
   startRotation();
   setupFullscreen();
   initFirebase();
+  const s2Frame = document.getElementById('s2Frame');
+  if(s2Frame) s2Frame.addEventListener('load', applyScreen2Zoom);
 });
 </script>
 </body>
