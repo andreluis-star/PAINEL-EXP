@@ -12,6 +12,7 @@
   --verde: #1e8e3e;
   --verde-escuro: #146428;
   --amarelo: #f4c20d;
+  --laranja: #f7941d;
   --navy: #0b1220;
   --card: #17203a;
   --texto: #eef2f8;
@@ -49,6 +50,8 @@ button{font-family:inherit;cursor:pointer;}
 
 .col-center{flex:1;height:100%;display:flex;flex-direction:row;gap:14px;}
 .col-center .panel{flex:1;min-height:0;}
+.col-center-stack{flex:1;height:100%;min-height:0;display:flex;flex-direction:column;gap:14px;}
+.col-center-stack .panel{flex:1;min-height:0;}
 
 .ops-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0;border-bottom:1px solid #26314f;padding-bottom:8px;}
 .ops-table{width:100%;border-collapse:collapse;font-size:1vw;table-layout:fixed;}
@@ -58,9 +61,21 @@ button{font-family:inherit;cursor:pointer;}
 .status-badge{display:inline-block;padding:3px 9px;border-radius:5px;font-size:.78vw;font-weight:800;color:#fff;white-space:nowrap;}
 .status-badge.st-urgencia{background:var(--vermelho);}
 .status-badge.st-agentes{background:#4dabf7;}
-.status-badge.st-concluido{background:#4caf50;}
+.status-badge.st-concluido{background:#1a4fe0;}
 .status-badge.st-processo{background:#ff9800;}
 .status-badge.st-naofeito{background:#5c6478;}
+
+/* ---- Operações Detalhadas — grade estilo planilha (Tela 3) ---- */
+.ops-detail-wrap{background:var(--card);}
+.ops-detail-table{width:100%;border-collapse:collapse;table-layout:fixed;background:#fff;border-radius:8px;overflow:hidden;}
+.ops-detail-table thead th{background:var(--laranja);color:#111;font-weight:800;text-transform:uppercase;text-align:center;padding:12px 10px;border:1px solid rgba(0,0,0,.15);font-size:1.15vw;letter-spacing:.3px;}
+.ops-detail-table tbody td{background:#fff;color:#111;font-weight:700;text-align:center;padding:11px 10px;border:1px solid #d8dbe2;font-size:1.05vw;white-space:normal;}
+.ops-detail-table tbody td.mov-carga{background:#b7e4c7;}
+.ops-detail-table tbody td.mov-descarga{background:#f7c6c7;}
+.ops-detail-table tbody td.mov-carga_descarga{background:#ffe1a8;}
+.ops-detail-table tbody td.status-cell{padding:0;}
+.ops-detail-table .status-badge{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:0;padding:11px 10px;box-sizing:border-box;}
+.ops-detail-table .empty-msg{background:#fff;color:#556;}
 
 .safety-wrap{flex:0 0 auto;border:none;}
 .safety-title-bar{background:var(--verde-escuro);color:#fff;padding:12px 14px;text-align:center;font-weight:800;font-size:1.1vw;letter-spacing:.4px;line-height:1.3;}
@@ -168,9 +183,23 @@ button{font-family:inherit;cursor:pointer;}
             </table>
           </div>
         </div>
-        <div class="panel hero-box">
-          <h3>Operações por Conferente</h3>
-          <div class="scroll" id="chartConferente"></div>
+        <div class="col-center-stack">
+          <div class="panel hero-box">
+            <h3>Operações por Conferente</h3>
+            <div class="scroll" id="chartConferente"></div>
+          </div>
+          <div class="panel hero-box">
+            <div class="ops-panel-head">
+              <h3 style="margin:0;border:0;padding:0;">Operações — Sistema de Conferência</h3>
+              <span class="ops-pct" id="opsLiveCount">0 hoje</span>
+            </div>
+            <div class="scroll" style="flex:1;overflow-y:auto;">
+              <table class="ops-table" id="opsLiveTable">
+                <thead><tr><th>Data/Hora</th><th>Placa</th><th>Tipo</th><th>Conferente</th><th>Status</th></tr></thead>
+                <tbody id="opsLiveBody"><tr><td colspan="5" class="empty-msg">Sem operações hoje</td></tr></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -181,29 +210,17 @@ button{font-family:inherit;cursor:pointer;}
     <iframe id="s2Frame" src="mao-de-obra.html" title="Mão de Obra Terceirizada" allow="fullscreen"></iframe>
   </div>
 
-  <!-- SCREEN 3: Operações Detalhadas (topo) + índice ao vivo do Sistema de Conferência (base) -->
-  <div id="screen3" class="screen" style="padding:14px 18px;gap:14px;">
-    <div class="panel hero-box" style="flex:1;min-height:0;">
+  <!-- SCREEN 3: Operações Detalhadas — layout único, tela cheia -->
+  <div id="screen3" class="screen" style="padding:14px 18px;">
+    <div class="panel hero-box ops-detail-wrap" style="flex:1;min-height:0;">
       <div class="ops-panel-head">
         <h3 style="margin:0;border:0;padding:0;">Operações Detalhadas</h3>
         <span class="ops-pct" id="opsPct">0%</span>
       </div>
       <div class="scroll">
-        <table class="ops-table" id="opsDisplayTable">
-          <thead><tr><th>Veículo/Operação</th><th>Operação</th><th>Carga/Descarga</th><th>Conferente</th><th>Status</th></tr></thead>
+        <table class="ops-table ops-detail-table" id="opsDisplayTable">
+          <thead><tr><th>Operação</th><th>Conferente</th><th>Veículo</th><th>Movimento</th><th>Status</th></tr></thead>
           <tbody id="opsDisplayBody"><tr><td colspan="5" class="empty-msg">Nenhuma operação cadastrada</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="panel hero-box" style="flex:1;min-height:0;">
-      <div class="ops-panel-head">
-        <h3 style="margin:0;border:0;padding:0;">Operações — Sistema de Conferência</h3>
-        <span class="ops-pct" id="opsLiveCount">0 hoje</span>
-      </div>
-      <div class="scroll" style="flex:1;overflow-y:auto;">
-        <table class="ops-table" id="opsLiveTable">
-          <thead><tr><th>Data/Hora</th><th>Placa</th><th>Tipo</th><th>Conferente</th><th>Status</th></tr></thead>
-          <tbody id="opsLiveBody"><tr><td colspan="5" class="empty-msg">Sem operações hoje</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -340,11 +357,11 @@ function renderOpsDetailPanel(){
   }
   body.innerHTML = ops.map(o=>`
     <tr>
-      <td>${escapeHtml(o.veiculo)}</td>
       <td>${escapeHtml(o.operacao||'—')}</td>
-      <td>${tipoLabel(o.tipo)}</td>
       <td>${escapeHtml(o.conferente||'—')}</td>
-      <td><span class="status-badge ${statusClass(o.status)}">${escapeHtml(o.status)}</span></td>
+      <td>${escapeHtml(o.veiculo)}</td>
+      <td class="mov-${o.tipo||'carga'}">${tipoLabel(o.tipo)}</td>
+      <td class="status-cell"><span class="status-badge ${statusClass(o.status)}">${escapeHtml(o.status)}</span></td>
     </tr>`).join('');
   fitOpsTable();
 }
@@ -363,7 +380,10 @@ function fitTableRows(tableId, rowCount){
     const perRow = Math.max(10, (totalH - headH) / rowCount);
     const vPad = Math.max(0.5, Math.min(7, perRow * 0.22));
     const fontPx = Math.max(8, Math.min(18, perRow - vPad*2 - 2));
-    table.querySelectorAll('td,th').forEach(c=>{ c.style.padding = vPad.toFixed(1)+'px 6px'; });
+    table.querySelectorAll('td,th').forEach(c=>{
+      c.style.padding = c.classList.contains('status-cell') ? '0' : vPad.toFixed(1)+'px 10px';
+    });
+    table.querySelectorAll('.status-badge').forEach(b=>{ b.style.padding = vPad.toFixed(1)+'px 10px'; });
     table.style.fontSize = fontPx.toFixed(1) + 'px';
   });
 }
@@ -390,15 +410,10 @@ function applyZoom(){
   const z3 = document.getElementById('screen3');
   if(z1) z1.style.zoom = (CFG.zoom1 || 100) + '%';
   if(z3) z3.style.zoom = (CFG.zoom3 || 100) + '%';
-  applyScreen2Zoom();
-}
-function applyScreen2Zoom(){
-  const frame = document.getElementById('s2Frame');
-  if(!frame) return;
-  try{
-    const doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
-    if(doc && doc.body) doc.body.style.zoom = (CFG.zoom2 || 100) + '%';
-  }catch(e){ /* conteúdo ainda não carregou ou é de outra origem — ignora */ }
+  /* Tela 2 (Mão de Obra) não recebe mais zoom aplicado por aqui — a
+     página carregada no iframe (mao-de-obra.html) mantém sua própria
+     configuração/escala original, pois o zoom não corrigia a tela da
+     forma necessária. */
 }
 
 function startClock(){
@@ -629,8 +644,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   startRotation();
   setupFullscreen();
   initFirebase();
-  const s2Frame = document.getElementById('s2Frame');
-  if(s2Frame) s2Frame.addEventListener('load', applyScreen2Zoom);
 });
 </script>
 </body>
