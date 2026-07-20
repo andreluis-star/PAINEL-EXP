@@ -410,10 +410,15 @@ function applyZoom(){
   const z3 = document.getElementById('screen3');
   if(z1) z1.style.zoom = (CFG.zoom1 || 100) + '%';
   if(z3) z3.style.zoom = (CFG.zoom3 || 100) + '%';
-  /* Tela 2 (Mão de Obra) não recebe mais zoom aplicado por aqui — a
-     página carregada no iframe (mao-de-obra.html) mantém sua própria
-     configuração/escala original, pois o zoom não corrigia a tela da
-     forma necessária. */
+  applyScreen2Zoom();
+}
+function applyScreen2Zoom(){
+  const frame = document.getElementById('s2Frame');
+  if(!frame) return;
+  try{
+    const doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+    if(doc && doc.body) doc.body.style.zoom = (CFG.zoom2 || 100) + '%';
+  }catch(e){ /* conteúdo ainda não carregou ou é de outra origem — ignora */ }
 }
 
 function startClock(){
@@ -644,6 +649,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
   startRotation();
   setupFullscreen();
   initFirebase();
+  const s2Frame = document.getElementById('s2Frame');
+  if(s2Frame) s2Frame.addEventListener('load', applyScreen2Zoom);
 });
 </script>
 </body>
