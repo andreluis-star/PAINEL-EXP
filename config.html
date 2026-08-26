@@ -93,21 +93,33 @@ input,select,textarea{font-family:inherit;}
       <textarea id="cfgTicker" placeholder="Ex: Bem-vindo à PortoEx! Trabalhe com segurança todos os dias."></textarea>
     </div>
 
-    <div class="cfg-box">
+    <div class="cfg-box cfg-box-wide">
       <h2>⏱ Telas — Duração e Zoom</h2>
-      <div class="hint" style="margin-top:0;">Cada tela roda o tempo definido abaixo e pode ter um zoom próprio (100% = tamanho normal).</div>
+      <div class="hint" style="margin-top:0;">Cada tela roda o tempo definido abaixo e pode ter um zoom próprio (100% = tamanho normal). O relógio grande no canto superior direito aparece em todas as telas automaticamente.</div>
 
       <div class="zoom-row">
-        <div><label>Duração Tela 1 — Produtividade (s)</label><input type="number" id="cfgDur1" min="5" value="20"/></div>
+        <div><label>Duração Tela 1 — Cards + Segurança (s)</label><input type="number" id="cfgDur1" min="5" value="15"/></div>
         <div><label>Zoom Tela 1 (%)</label><input type="number" id="cfgZoom1" min="50" max="200" value="100"/></div>
       </div>
       <div class="zoom-row">
-        <div><label>Duração Tela 2 — Mão de Obra (s)</label><input type="number" id="cfgDur2" min="5" value="20"/></div>
+        <div><label>Duração Tela 2 — Equipe Interna (s)</label><input type="number" id="cfgDur2" min="5" value="15"/></div>
         <div><label>Zoom Tela 2 (%)</label><input type="number" id="cfgZoom2" min="50" max="200" value="100"/></div>
       </div>
       <div class="zoom-row">
-        <div><label>Duração Tela 3 — Operações (s)</label><input type="number" id="cfgDur3" min="5" value="20"/></div>
+        <div><label>Duração Tela 3 — Operações por Conferente (s)</label><input type="number" id="cfgDur3" min="5" value="15"/></div>
         <div><label>Zoom Tela 3 (%)</label><input type="number" id="cfgZoom3" min="50" max="200" value="100"/></div>
+      </div>
+      <div class="zoom-row">
+        <div><label>Duração Tela 4 — Sistema de Conferência (s)</label><input type="number" id="cfgDur4" min="5" value="15"/></div>
+        <div><label>Zoom Tela 4 (%)</label><input type="number" id="cfgZoom4" min="50" max="200" value="100"/></div>
+      </div>
+      <div class="zoom-row">
+        <div><label>Duração Tela 5 — Mão de Obra (s)</label><input type="number" id="cfgDur5" min="5" value="20"/></div>
+        <div><label>Zoom Tela 5 (%)</label><input type="number" id="cfgZoom5" min="50" max="200" value="100"/></div>
+      </div>
+      <div class="zoom-row">
+        <div><label>Duração Tela 6 — Operações Detalhadas (s)</label><input type="number" id="cfgDur6" min="5" value="20"/></div>
+        <div><label>Zoom Tela 6 (%)</label><input type="number" id="cfgZoom6" min="50" max="200" value="100"/></div>
       </div>
     </div>
 
@@ -124,16 +136,16 @@ input,select,textarea{font-family:inherit;}
       <input type="email" id="cfgSys1Email"/>
       <label>Senha</label>
       <input type="password" id="cfgSys1Pass"/>
-      <div class="hint">Credenciais usadas para ler os dados de Dashboard, Operações por Conferente, Paletes e o índice de Operações (Tela 3).</div>
+      <div class="hint">Credenciais usadas para ler os dados de Cards, Operações por Conferente, Paletes e o índice ao vivo do Sistema de Conferência (Tela 4).</div>
     </div>
 
     <div class="cfg-box">
-      <h2>🔑 Acesso — Sistema de Mão de Obra (Tela 2)</h2>
+      <h2>🔑 Acesso — Sistema de Mão de Obra (Tela 5)</h2>
       <label>Login</label>
       <input type="text" id="cfgSys2Login"/>
       <label>Senha</label>
       <input type="password" id="cfgSys2Pass"/>
-      <div class="hint">A Tela 2 entra automaticamente com este login, sem pedir senha — não precisa fazer nada manualmente. (A senha acima não é usada para autenticar, apenas identifica qual usuário cadastrado no sistema de mão de obra deve ficar logado.)</div>
+      <div class="hint">A Tela 5 entra automaticamente com este login, sem pedir senha — não precisa fazer nada manualmente. (A senha acima não é usada para autenticar, apenas identifica qual usuário cadastrado no sistema de mão de obra deve ficar logado.)</div>
     </div>
 
     <div class="cfg-box">
@@ -224,8 +236,8 @@ function defaultConfig(){
   const today = new Date().toISOString().slice(0,10);
   return {
     ticker: 'Bem-vindo à PortoEx! Trabalhe com segurança todos os dias.',
-    dur1: 20, dur2: 20, dur3: 20,
-    zoom1: 100, zoom2: 100, zoom3: 100,
+    dur1: 15, dur2: 15, dur3: 15, dur4: 15, dur5: 20, dur6: 20,
+    zoom1: 100, zoom2: 100, zoom3: 100, zoom4: 100, zoom5: 100, zoom6: 100,
     safetyDate: today,
     sys1Email: 'andre.luis@portoex.com.br',
     sys1Pass: 'andre185166',
@@ -237,12 +249,31 @@ function defaultConfig(){
   };
 }
 
+/* Migra configurações da versão antiga (3 telas: dur1/zoom1 Produtividade,
+   dur2/zoom2 Mão de Obra, dur3/zoom3 Operações Detalhadas) para a nova
+   estrutura de 6 telas, só quando ainda não existir configuração nova
+   salva — assim ninguém perde o tempo/zoom que já tinha ajustado. */
+function migrateScreenTimings(cfg, raw){
+  if(!raw) return cfg;
+  const hasNew = raw.dur4!==undefined || raw.dur5!==undefined || raw.dur6!==undefined;
+  if(!hasNew){
+    if(raw.dur2!==undefined) cfg.dur5 = raw.dur2;
+    if(raw.zoom2!==undefined) cfg.zoom5 = raw.zoom2;
+    if(raw.dur3!==undefined) cfg.dur6 = raw.dur3;
+    if(raw.zoom3!==undefined) cfg.zoom6 = raw.zoom3;
+  }
+  return cfg;
+}
+
 let CFG = defaultConfig();
 
 function loadLocalCache(){
   try{
     const raw = localStorage.getItem(LS_KEY);
-    if(raw) CFG = Object.assign(defaultConfig(), JSON.parse(raw));
+    if(raw){
+      const parsed = JSON.parse(raw);
+      CFG = migrateScreenTimings(Object.assign(defaultConfig(), parsed), parsed);
+    }
   }catch(e){ /* mantém defaults */ }
 }
 
@@ -251,9 +282,15 @@ function fillConfigForm(){
   document.getElementById('cfgDur1').value = CFG.dur1;
   document.getElementById('cfgDur2').value = CFG.dur2;
   document.getElementById('cfgDur3').value = CFG.dur3;
+  document.getElementById('cfgDur4').value = CFG.dur4;
+  document.getElementById('cfgDur5').value = CFG.dur5;
+  document.getElementById('cfgDur6').value = CFG.dur6;
   document.getElementById('cfgZoom1').value = CFG.zoom1;
   document.getElementById('cfgZoom2').value = CFG.zoom2;
   document.getElementById('cfgZoom3').value = CFG.zoom3;
+  document.getElementById('cfgZoom4').value = CFG.zoom4;
+  document.getElementById('cfgZoom5').value = CFG.zoom5;
+  document.getElementById('cfgZoom6').value = CFG.zoom6;
   document.getElementById('cfgSafetyDate').value = CFG.safetyDate;
   document.getElementById('cfgSys1Email').value = CFG.sys1Email;
   document.getElementById('cfgSys1Pass').value = CFG.sys1Pass;
@@ -267,12 +304,18 @@ function fillConfigForm(){
 
 function readConfigForm(){
   CFG.ticker = document.getElementById('cfgTicker').value.trim() || defaultConfig().ticker;
-  CFG.dur1 = parseInt(document.getElementById('cfgDur1').value) || 20;
-  CFG.dur2 = parseInt(document.getElementById('cfgDur2').value) || 20;
-  CFG.dur3 = parseInt(document.getElementById('cfgDur3').value) || 20;
+  CFG.dur1 = parseInt(document.getElementById('cfgDur1').value) || 15;
+  CFG.dur2 = parseInt(document.getElementById('cfgDur2').value) || 15;
+  CFG.dur3 = parseInt(document.getElementById('cfgDur3').value) || 15;
+  CFG.dur4 = parseInt(document.getElementById('cfgDur4').value) || 15;
+  CFG.dur5 = parseInt(document.getElementById('cfgDur5').value) || 20;
+  CFG.dur6 = parseInt(document.getElementById('cfgDur6').value) || 20;
   CFG.zoom1 = parseInt(document.getElementById('cfgZoom1').value) || 100;
   CFG.zoom2 = parseInt(document.getElementById('cfgZoom2').value) || 100;
   CFG.zoom3 = parseInt(document.getElementById('cfgZoom3').value) || 100;
+  CFG.zoom4 = parseInt(document.getElementById('cfgZoom4').value) || 100;
+  CFG.zoom5 = parseInt(document.getElementById('cfgZoom5').value) || 100;
+  CFG.zoom6 = parseInt(document.getElementById('cfgZoom6').value) || 100;
   CFG.safetyDate = document.getElementById('cfgSafetyDate').value || defaultConfig().safetyDate;
   CFG.sys1Email = document.getElementById('cfgSys1Email').value.trim();
   CFG.sys1Pass = document.getElementById('cfgSys1Pass').value;
@@ -443,7 +486,8 @@ function initFirebase(){
       })
       .then(doc=>{
         if(doc && doc.exists){
-          CFG = Object.assign(defaultConfig(), doc.data());
+          const data = doc.data();
+          CFG = migrateScreenTimings(Object.assign(defaultConfig(), data), data);
           fillConfigForm();
         }
         setCloudStatus('ok', '☁️ Conectado — o que você salvar aqui chega direto na TV.');
