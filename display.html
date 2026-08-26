@@ -23,13 +23,23 @@
 html,body{margin:0;padding:0;height:100%;background:#000;font-family:'Segoe UI',Arial,sans-serif;color:var(--texto);overflow:hidden;}
 button{font-family:inherit;cursor:pointer;}
 
-#displayScreen{height:100vh;width:100vw;position:relative;background:var(--navy);}
-.gear{position:absolute;top:10px;right:10px;z-index:999;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:17px;display:flex;align-items:center;justify-content:center;text-decoration:none;}
+#displayScreen{height:100vh;width:100vw;position:relative;background:var(--navy);display:flex;flex-direction:column;}
+.gear{position:absolute;top:14px;left:14px;z-index:999;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);color:#fff;width:38px;height:38px;border-radius:50%;font-size:17px;display:flex;align-items:center;justify-content:center;text-decoration:none;}
+
+/* ---- Relógio global — faixa fixa no topo (~25% da altura), aparece em TODAS as telas ---- */
+.global-clock-bar{flex:0 0 25vh;height:25vh;display:flex;align-items:center;justify-content:center;gap:36px;background:linear-gradient(180deg,#141d33,#0d1526);border-bottom:2px solid #26314f;position:relative;z-index:10;}
+.gc-logo{height:55%;max-height:150px;object-fit:contain;}
+.gc-text{display:flex;flex-direction:column;align-items:center;line-height:1;}
+.gc-time{font-size:11vh;font-weight:800;letter-spacing:2px;color:var(--amarelo);font-variant-numeric:tabular-nums;line-height:1;}
+.gc-date{font-size:2.3vh;color:var(--muted);text-transform:capitalize;margin-top:12px;}
+
+/* ---- Área das telas — ocupa o restante (~75% da altura) ---- */
+#screensWrap{position:relative;flex:1;min-height:0;overflow:hidden;}
 .screen{position:absolute;inset:0;display:none;flex-direction:column;transform-origin:top left;}
 .screen.active{display:flex;}
 
-/* ---- Screen 1 ---- */
-#screen1{padding:14px 18px;gap:12px;}
+/* ---- Tela 1 — Cards ---- */
+#screen1{padding:14px 18px;gap:14px;}
 
 .ticker-bar{height:6.5vh;min-height:46px;flex-shrink:0;background:var(--card);border-radius:10px;border:1px solid #26314f;display:flex;align-items:center;padding:0 18px;gap:16px;overflow:hidden;}
 .live-tag{display:flex;align-items:center;gap:7px;color:var(--vermelho);font-weight:800;font-size:.85vw;letter-spacing:1.5px;white-space:nowrap;flex-shrink:0;text-transform:uppercase;}
@@ -39,91 +49,86 @@ button{font-family:inherit;cursor:pointer;}
 .ticker-track{position:absolute;white-space:nowrap;font-size:2.7vw;font-weight:700;color:#fff;text-transform:uppercase;will-change:transform;animation:ticker-scroll linear infinite;}
 @keyframes ticker-scroll{from{transform:translateX(100%);}to{transform:translateX(-100%);}}
 
-.main-row{display:flex;gap:14px;flex:1;min-height:0;}
 .hero-box{border-radius:14px;border:1px solid #26314f;display:flex;flex-direction:column;overflow:hidden;}
 
-.col-left{flex:0 0 26%;height:100%;display:flex;flex-direction:column;gap:14px;}
-.clock-box{flex:1;background:var(--card);align-items:center;justify-content:center;}
-.clock-logo{max-width:60%;max-height:22%;object-fit:contain;margin-bottom:10px;}
-.clock-time{font-size:6.6vw;font-weight:800;letter-spacing:2px;color:var(--amarelo);font-variant-numeric:tabular-nums;line-height:1;}
-.clock-date{font-size:1.5vw;color:var(--muted);margin-top:16px;text-transform:capitalize;text-align:center;padding:0 10px;}
-
-.col-center{flex:1;height:100%;display:flex;flex-direction:row;gap:14px;}
-.col-center .panel{flex:1;min-height:0;}
-.col-center-stack{flex:1;height:100%;min-height:0;display:flex;flex-direction:column;gap:14px;}
-.col-center-stack .panel{flex:1;min-height:0;}
-
-.ops-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-shrink:0;border-bottom:1px solid #26314f;padding-bottom:8px;}
-.ops-table{width:100%;border-collapse:collapse;font-size:1vw;table-layout:fixed;}
-.ops-table th{text-align:left;color:var(--muted);padding:6px 6px;position:sticky;top:0;background:var(--card);}
-.ops-table td{padding:7px 6px;border-bottom:1px solid #1e2740;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-
-.status-badge{display:inline-block;padding:3px 9px;border-radius:5px;font-size:.78vw;font-weight:800;color:#fff;white-space:nowrap;}
-.status-badge.st-urgencia{background:var(--vermelho);}
-.status-badge.st-agentes{background:#4dabf7;}
-.status-badge.st-concluido{background:#1a4fe0;}
-.status-badge.st-processo{background:#ff9800;}
-.status-badge.st-naofeito{background:#5c6478;}
-
-/* ---- Operações Detalhadas — grade estilo planilha (Tela 3) ---- */
-.ops-detail-wrap{background:var(--card);}
-.ops-detail-table{width:100%;border-collapse:collapse;table-layout:fixed;background:#fff;border-radius:8px;overflow:hidden;}
-.ops-detail-table thead th{background:var(--laranja);color:#111;font-weight:800;text-transform:uppercase;text-align:center;padding:12px 10px;border:1px solid rgba(0,0,0,.15);font-size:1.15vw;letter-spacing:.3px;}
-.ops-detail-table tbody td{background:#fff;color:#111;font-weight:700;text-align:center;padding:11px 10px;border:1px solid #d8dbe2;font-size:1.05vw;white-space:normal;}
-.ops-detail-table tbody td.mov-carga{background:#b7e4c7;}
-.ops-detail-table tbody td.mov-descarga{background:#f7c6c7;}
-.ops-detail-table tbody td.mov-carga_descarga{background:#ffe1a8;}
-.ops-detail-table tbody td.status-cell{padding:0;}
-.ops-detail-table .status-badge{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:0;padding:11px 10px;box-sizing:border-box;}
-.ops-detail-table .empty-msg{background:#fff;color:#556;}
-
-.safety-wrap{flex:0 0 auto;border:none;}
-.safety-title-bar{background:var(--verde-escuro);color:#fff;padding:12px 14px;text-align:center;font-weight:800;font-size:1.1vw;letter-spacing:.4px;line-height:1.3;}
-.safety-panel{background:var(--verde);padding:26px 14px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.safety-status{color:#fff;font-weight:900;font-size:1.4vw;line-height:1.2;}
-.safety-status .num{font-size:3.2vw;display:block;line-height:1.05;}
-.safety-footer{background:var(--verde-escuro);padding:10px 12px;text-align:center;color:#fff;font-weight:700;font-size:.9vw;letter-spacing:.4px;}
-
-.panel{background:var(--card);border-radius:14px;border:1px solid #26314f;padding:14px 16px;display:flex;flex-direction:column;min-height:0;}
-.panel h3{margin:0 0 10px;font-size:1vw;color:var(--amarelo);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #26314f;padding-bottom:8px;flex-shrink:0;}
-.panel .scroll{overflow-y:auto;flex:1;min-height:0;}
-.team-box .scroll{overflow:hidden;}
-
-.team-table{width:100%;border-collapse:collapse;font-size:1vw;table-layout:fixed;}
-.team-table th{text-align:left;color:var(--muted);padding:6px 6px;position:sticky;top:0;background:var(--card);}
-.team-table td{padding:7px 6px;border-bottom:1px solid #1e2740;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-
-.cards-row{display:flex;gap:10px;flex-shrink:0;}
-.stat-card{flex:1;background:#0f1626;border-radius:10px;padding:7px 12px;border:1px solid #26314f;}
-.stat-card .lbl{font-size:.68vw;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
-.stat-card .val{font-size:1.5vw;font-weight:800;margin-top:2px;}
+.cards-row{display:flex;gap:16px;flex:1;min-height:0;}
+.stat-card{flex:1;background:#0f1626;border-radius:16px;padding:20px;border:1px solid #26314f;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.stat-card .lbl{font-size:1.6vw;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.stat-card .val{font-size:6vw;font-weight:800;margin-top:16px;}
 .stat-card.ok .val{color:#4caf50;}
 .stat-card.warn .val{color:#ff9800;}
 .stat-card.bad .val{color:var(--vermelho);}
 .stat-card.info .val{color:#4dabf7;}
 .stat-card.pal .val{color:var(--amarelo);}
 
-.bar-item{margin-bottom:11px;}
-.bar-item .bl{display:flex;justify-content:space-between;font-size:1vw;margin-bottom:4px;}
+/* ---- Tela 2 — Equipe Interna + Segurança lado a lado ---- */
+.split-row{display:flex;gap:14px;flex:1;min-height:0;}
+
+.safety-wrap{border:none;}
+.safety-title-bar{background:var(--verde-escuro);color:#fff;padding:20px 20px;text-align:center;font-weight:800;font-size:2vw;letter-spacing:.4px;line-height:1.3;}
+.safety-panel{background:var(--verde);padding:26px 14px;text-align:center;display:flex;flex:1;flex-direction:column;align-items:center;justify-content:center;}
+.safety-status{color:#fff;font-weight:900;font-size:2.6vw;line-height:1.2;}
+.safety-status .num{font-size:11vw;display:block;line-height:1.05;}
+.safety-footer{background:var(--verde-escuro);padding:16px 12px;text-align:center;color:#fff;font-weight:700;font-size:1.4vw;letter-spacing:.4px;}
+
+.panel{background:var(--card);border-radius:14px;border:1px solid #26314f;padding:16px 20px;display:flex;flex-direction:column;min-height:0;}
+.panel h3{margin:0 0 12px;font-size:1.3vw;color:var(--amarelo);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #26314f;padding-bottom:10px;flex-shrink:0;}
+.panel .scroll{overflow-y:auto;flex:1;min-height:0;}
+
+.ops-panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-shrink:0;border-bottom:1px solid #26314f;padding-bottom:10px;}
+.ops-panel-head h3{margin:0;border:0;padding:0;}
+.ops-pct{background:#0f1626;border:1px solid #26314f;border-radius:20px;padding:6px 16px;font-size:1.1vw;font-weight:800;color:var(--amarelo);white-space:nowrap;}
+
+.ops-table{width:100%;border-collapse:collapse;font-size:1.3vw;table-layout:fixed;}
+.ops-table th{text-align:left;color:var(--muted);padding:8px 8px;position:sticky;top:0;background:var(--card);}
+.ops-table td{padding:9px 8px;border-bottom:1px solid #1e2740;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+.status-badge{display:inline-block;padding:4px 11px;border-radius:5px;font-size:.85em;font-weight:800;color:#fff;white-space:nowrap;}
+.status-badge.st-urgencia{background:var(--vermelho);}
+.status-badge.st-agentes{background:#4dabf7;}
+.status-badge.st-concluido{background:#1a4fe0;}
+.status-badge.st-processo{background:#ff9800;}
+.status-badge.st-naofeito{background:#5c6478;}
+
+/* ---- Tela 2 — Equipe Interna (tabela) ---- */
+.team-table{width:100%;border-collapse:collapse;font-size:1.3vw;table-layout:fixed;}
+.team-table th{text-align:left;color:var(--muted);padding:8px 8px;position:sticky;top:0;background:var(--card);}
+.team-table td{padding:9px 8px;border-bottom:1px solid #1e2740;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ---- Tela 3 — Operações por Conferente ---- */
+.bar-item{margin-bottom:22px;}
+.bar-item .bl{display:flex;justify-content:space-between;font-size:1.7vw;margin-bottom:8px;}
 .bar-item .bl .n{font-weight:700;}
 .bar-item .bl .c{color:var(--amarelo);font-weight:700;}
-.bar-track{background:#0f1626;border-radius:6px;height:12px;overflow:hidden;}
-.bar-fill{background:linear-gradient(90deg,#f4c20d,#ff9800);height:100%;border-radius:6px;}
+.bar-track{background:#0f1626;border-radius:8px;height:22px;overflow:hidden;}
+.bar-fill{background:linear-gradient(90deg,#f4c20d,#ff9800);height:100%;border-radius:8px;}
 
-.empty-msg{color:var(--muted);font-size:.9vw;padding:20px;text-align:center;}
+.empty-msg{color:var(--muted);font-size:1.2vw;padding:24px;text-align:center;}
 
-/* ---- Screen 2 (Mão de obra) ---- */
-#screen2{padding:0;background:#111;}
-#s2Frame{width:100%;height:100%;border:0;display:block;}
+/* ---- Tela 6 — Operações Detalhadas — grade estilo planilha ---- */
+.ops-detail-wrap{background:var(--card);}
+.ops-detail-table{width:100%;border-collapse:collapse;table-layout:fixed;background:#fff;border-radius:8px;overflow:hidden;}
+.ops-detail-table thead th{background:var(--laranja);color:#111;font-weight:800;text-transform:uppercase;text-align:center;padding:14px 10px;border:1px solid rgba(0,0,0,.15);font-size:1.3vw;letter-spacing:.3px;}
+.ops-detail-table tbody td{background:#fff;color:#111;font-weight:700;text-align:center;padding:12px 10px;border:1px solid #d8dbe2;font-size:1.2vw;white-space:normal;}
+.ops-detail-table tbody td.mov-carga{background:#b7e4c7;}
+.ops-detail-table tbody td.mov-descarga{background:#f7c6c7;}
+.ops-detail-table tbody td.mov-carga_descarga{background:#ffe1a8;}
+.ops-detail-table tbody td.status-cell{padding:0;}
+.ops-detail-table .status-badge{display:flex;align-items:center;justify-content:center;width:100%;height:100%;border-radius:0;padding:12px 10px;box-sizing:border-box;}
+.ops-detail-table .empty-msg{background:#fff;color:#556;}
+
+/* ---- Tela 5 — Mão de obra ---- */
+#screen5{padding:0;background:#111;}
+#s5Frame{width:100%;height:100%;border:0;display:block;}
 </style>
 </head>
 <body>
 
 <script>
 /* =====================================================================
-   SESSÃO TELA 2 — evita pedir login toda vez (ver comentário completo
-   no listenSys2 mais abaixo). Roda cedo para já gravar a sessão antes
-   do iframe da Tela 2 carregar.
+   SESSÃO TELA MÃO DE OBRA — evita pedir login toda vez (ver comentário
+   completo no listenSys2 mais abaixo). Roda cedo para já gravar a
+   sessão antes do iframe carregar.
 ===================================================================== */
 (function seedSys2Session(){
   try{
@@ -133,48 +138,45 @@ button{font-family:inherit;cursor:pointer;}
     if(login){
       localStorage.setItem('portoex_tv_session', JSON.stringify({login}));
     }
-  }catch(e){ console.error('Nao foi possivel preparar a sessao da Tela 2:', e.message); }
+  }catch(e){ console.error('Nao foi possivel preparar a sessao da Tela de Mao de Obra:', e.message); }
 })();
 </script>
 
 <div id="displayScreen">
   <a class="gear" href="config.html" title="Configurações">⚙</a>
 
-  <!-- SCREEN 1: Produtividade + Segurança -->
-  <div id="screen1" class="screen active">
-    <div class="ticker-bar">
-      <div class="live-tag"><span class="live-dot"></span>Ao Vivo</div>
-      <div class="ticker-box">
-        <div class="ticker-track" id="tickerTrack"></div>
-      </div>
+  <!-- RELÓGIO GLOBAL — faixa fixa no topo, visível em todas as telas -->
+  <div class="global-clock-bar">
+    <img class="gc-logo" src="logo-portoex.png" alt="PortoEx" onerror="this.style.display='none'"/>
+    <div class="gc-text">
+      <div class="gc-time" id="clockTime">00:00</div>
+      <div class="gc-date" id="clockDate">—</div>
     </div>
+  </div>
 
-    <div class="cards-row">
-      <div class="stat-card info"><div class="lbl">Operações Hoje</div><div class="val" id="cardOpsHoje">0</div></div>
-      <div class="stat-card ok"><div class="lbl">Concluídas</div><div class="val" id="cardConcluidas">0</div></div>
-      <div class="stat-card bad"><div class="lbl">Discrepâncias</div><div class="val" id="cardDiscrepancias">0</div></div>
-      <div class="stat-card warn"><div class="lbl">Conferentes Ativos</div><div class="val" id="cardConferentes">0</div></div>
-      <div class="stat-card pal"><div class="lbl">Paletes Hoje</div><div class="val" id="cardPaletes">0</div></div>
-    </div>
-
-    <div class="main-row">
-      <div class="col-left">
-        <div class="clock-box hero-box">
-          <img class="clock-logo" src="logo-portoex.png" alt="PortoEx" onerror="this.style.display='none'"/>
-          <div class="clock-time" id="clockTime">00:00</div>
-          <div class="clock-date" id="clockDate">—</div>
-        </div>
-        <div class="safety-wrap hero-box">
-          <div class="safety-title-bar">O CUIDADO DE UM É A SEGURANÇA DE TODOS</div>
-          <div class="safety-panel">
-            <div class="safety-status">ESTAMOS HÁ<span class="num" id="safetyDays">0</span>DIAS SEM ACIDENTES</div>
-          </div>
-          <div class="safety-footer">COLABORE PARA MELHORAR ESSE ÍNDICE</div>
+  <div id="screensWrap">
+    <!-- TELA 1: Cards -->
+    <div id="screen1" class="screen active">
+      <div class="ticker-bar">
+        <div class="live-tag"><span class="live-dot"></span>Ao Vivo</div>
+        <div class="ticker-box">
+          <div class="ticker-track" id="tickerTrack"></div>
         </div>
       </div>
 
-      <div class="col-center">
-        <div class="panel team-box hero-box">
+      <div class="cards-row">
+        <div class="stat-card info"><div class="lbl">Operações Hoje</div><div class="val" id="cardOpsHoje">0</div></div>
+        <div class="stat-card ok"><div class="lbl">Concluídas</div><div class="val" id="cardConcluidas">0</div></div>
+        <div class="stat-card bad"><div class="lbl">Discrepâncias</div><div class="val" id="cardDiscrepancias">0</div></div>
+        <div class="stat-card warn"><div class="lbl">Conferentes Ativos</div><div class="val" id="cardConferentes">0</div></div>
+        <div class="stat-card pal"><div class="lbl">Paletes Hoje</div><div class="val" id="cardPaletes">0</div></div>
+      </div>
+    </div>
+
+    <!-- TELA 2: Equipe Interna + Segurança -->
+    <div id="screen2" class="screen" style="padding:14px 18px;gap:14px;">
+      <div class="split-row">
+        <div class="panel team-box hero-box" style="flex:1;min-height:0;">
           <h3>Equipe Interna</h3>
           <div class="scroll">
             <table class="team-table" id="teamDisplayTable">
@@ -183,45 +185,58 @@ button{font-family:inherit;cursor:pointer;}
             </table>
           </div>
         </div>
-        <div class="col-center-stack">
-          <div class="panel hero-box">
-            <h3>Operações por Conferente</h3>
-            <div class="scroll" id="chartConferente"></div>
+        <div class="safety-wrap hero-box" style="flex:0 0 34%;">
+          <div class="safety-title-bar">O CUIDADO DE UM É A SEGURANÇA DE TODOS</div>
+          <div class="safety-panel">
+            <div class="safety-status">ESTAMOS HÁ<span class="num" id="safetyDays">0</span>DIAS SEM ACIDENTES</div>
           </div>
-          <div class="panel hero-box">
-            <div class="ops-panel-head">
-              <h3 style="margin:0;border:0;padding:0;">Operações — Sistema de Conferência</h3>
-              <span class="ops-pct" id="opsLiveCount">0 hoje</span>
-            </div>
-            <div class="scroll" style="flex:1;overflow-y:auto;">
-              <table class="ops-table" id="opsLiveTable">
-                <thead><tr><th>Data/Hora</th><th>Placa</th><th>Tipo</th><th>Conferente</th><th>Status</th></tr></thead>
-                <tbody id="opsLiveBody"><tr><td colspan="5" class="empty-msg">Sem operações hoje</td></tr></tbody>
-              </table>
-            </div>
-          </div>
+          <div class="safety-footer">COLABORE PARA MELHORAR ESSE ÍNDICE</div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- SCREEN 2: Mão de Obra -->
-  <div id="screen2" class="screen">
-    <iframe id="s2Frame" src="mao-de-obra.html" title="Mão de Obra Terceirizada" allow="fullscreen"></iframe>
-  </div>
-
-  <!-- SCREEN 3: Operações Detalhadas — layout único, tela cheia -->
-  <div id="screen3" class="screen" style="padding:14px 18px;">
-    <div class="panel hero-box ops-detail-wrap" style="flex:1;min-height:0;">
-      <div class="ops-panel-head">
-        <h3 style="margin:0;border:0;padding:0;">Operações Detalhadas</h3>
-        <span class="ops-pct" id="opsPct">0%</span>
+    <!-- TELA 3: Operações por Conferente -->
+    <div id="screen3" class="screen" style="padding:14px 18px;">
+      <div class="panel hero-box" style="flex:1;min-height:0;">
+        <h3>Operações por Conferente</h3>
+        <div class="scroll" id="chartConferente"></div>
       </div>
-      <div class="scroll">
-        <table class="ops-table ops-detail-table" id="opsDisplayTable">
-          <thead><tr><th>Operação</th><th>Conferente</th><th>Veículo</th><th>Movimento</th><th>Status</th></tr></thead>
-          <tbody id="opsDisplayBody"><tr><td colspan="5" class="empty-msg">Nenhuma operação cadastrada</td></tr></tbody>
-        </table>
+    </div>
+
+    <!-- TELA 4: Operações — Sistema de Conferência (índice ao vivo) -->
+    <div id="screen4" class="screen" style="padding:14px 18px;">
+      <div class="panel hero-box" style="flex:1;min-height:0;">
+        <div class="ops-panel-head">
+          <h3>Operações — Sistema de Conferência</h3>
+          <span class="ops-pct" id="opsLiveCount">0 hoje</span>
+        </div>
+        <div class="scroll" style="flex:1;overflow-y:auto;">
+          <table class="ops-table" id="opsLiveTable">
+            <thead><tr><th>Data/Hora</th><th>Placa</th><th>Tipo</th><th>Conferente</th><th>Status</th></tr></thead>
+            <tbody id="opsLiveBody"><tr><td colspan="5" class="empty-msg">Sem operações hoje</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELA 5: Mão de Obra -->
+    <div id="screen5" class="screen">
+      <iframe id="s5Frame" src="mao-de-obra.html" title="Mão de Obra Terceirizada" allow="fullscreen"></iframe>
+    </div>
+
+    <!-- TELA 6: Operações Detalhadas — layout único, tela cheia -->
+    <div id="screen6" class="screen" style="padding:14px 18px;">
+      <div class="panel hero-box ops-detail-wrap" style="flex:1;min-height:0;">
+        <div class="ops-panel-head">
+          <h3>Operações Detalhadas</h3>
+          <span class="ops-pct" id="opsPct">0%</span>
+        </div>
+        <div class="scroll">
+          <table class="ops-table ops-detail-table" id="opsDisplayTable">
+            <thead><tr><th>Operação</th><th>Conferente</th><th>Veículo</th><th>Movimento</th><th>Status</th></tr></thead>
+            <tbody id="opsDisplayBody"><tr><td colspan="5" class="empty-msg">Nenhuma operação cadastrada</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -235,16 +250,25 @@ button{font-family:inherit;cursor:pointer;}
    qualquer alteração salva em config.html aparece aqui sozinha, sem
    precisar tocar na TV. Enquanto a nuvem não responde, usa os valores
    padrão abaixo para não ficar com a tela em branco.
+
+   TELAS (rotação): 1 Cards · 2 Equipe Interna + Segurança · 3 Operações
+   por Conferente · 4 Operações — Sistema de Conferência · 5 Mão de
+   Obra · 6 Operações Detalhadas. Cada uma tem sua própria duração
+   (dur1..dur6) e zoom (zoom1..zoom6) configuráveis em config.html.
+   O relógio grande fica numa faixa fixa no topo (~25% da altura) e
+   aparece em todas as telas — o conteúdo de cada tela roda no espaço
+   restante (#screensWrap).
 ===================================================================== */
 const LS_KEY = 'dasch_config_v1';
+const SCREEN_COUNT = 6;
 const STATUS_OPTIONS = ['URGÊNCIA','AGENTES','CONCLUÍDO','EM PROCESSO','NÃO FOI FEITO'];
 
 function defaultConfig(){
   const today = new Date().toISOString().slice(0,10);
   return {
     ticker: 'Bem-vindo à PortoEx! Trabalhe com segurança todos os dias.',
-    dur1: 20, dur2: 20, dur3: 20,
-    zoom1: 100, zoom2: 100, zoom3: 100,
+    dur1: 15, dur2: 15, dur3: 15, dur4: 15, dur5: 20, dur6: 20,
+    zoom1: 100, zoom2: 100, zoom3: 100, zoom4: 100, zoom5: 100, zoom6: 100,
     safetyDate: today,
     sys1Email: 'andre.luis@portoex.com.br',
     sys1Pass: 'andre185166',
@@ -255,6 +279,23 @@ function defaultConfig(){
     ops: []
   };
 }
+
+/* Migra configurações da versão antiga (3 telas: dur1/zoom1 Produtividade,
+   dur2/zoom2 Mão de Obra, dur3/zoom3 Operações Detalhadas) para a nova
+   estrutura de 6 telas, só quando ainda não existir configuração nova
+   salva — assim ninguém perde o tempo/zoom que já tinha ajustado. */
+function migrateScreenTimings(cfg, raw){
+  if(!raw) return cfg;
+  const hasNew = raw.dur4!==undefined || raw.dur5!==undefined || raw.dur6!==undefined;
+  if(!hasNew){
+    if(raw.dur2!==undefined) cfg.dur5 = raw.dur2;
+    if(raw.zoom2!==undefined) cfg.zoom5 = raw.zoom2;
+    if(raw.dur3!==undefined) cfg.dur6 = raw.dur3;
+    if(raw.zoom3!==undefined) cfg.zoom6 = raw.zoom3;
+  }
+  return cfg;
+}
+
 let CFG = defaultConfig();
 
 /* Tenta usar um cache local (útil se esta TV já rodou o painel antigo
@@ -262,7 +303,10 @@ let CFG = defaultConfig();
 (function seedFromLocalCache(){
   try{
     const raw = localStorage.getItem(LS_KEY);
-    if(raw) CFG = Object.assign(defaultConfig(), JSON.parse(raw));
+    if(raw){
+      const parsed = JSON.parse(raw);
+      CFG = migrateScreenTimings(Object.assign(defaultConfig(), parsed), parsed);
+    }
   }catch(e){ /* ignora */ }
 })();
 
@@ -326,7 +370,7 @@ function renderTeamDisplay(){
   fitTeamTable();
 }
 function fitTeamTable(){
-  const wrap = document.querySelector('#screen1 .team-box .scroll');
+  const wrap = document.querySelector('#screen2 .team-box .scroll');
   const table = document.getElementById('teamDisplayTable');
   const thead = table ? table.querySelector('thead') : null;
   if(!wrap || !table || !thead) return;
@@ -334,11 +378,11 @@ function fitTeamTable(){
     const rows = (CFG.team||[]).length;
     if(!rows) return;
     const totalH = wrap.clientHeight;
-    const headH = thead.getBoundingClientRect().height || 22;
-    const perRow = Math.max(10, (totalH - headH) / rows);
-    const vPad = Math.max(0.5, Math.min(7, perRow * 0.22));
-    const fontPx = Math.max(8, Math.min(20, perRow - vPad*2 - 2));
-    table.querySelectorAll('td,th').forEach(c=>{ c.style.padding = vPad.toFixed(1)+'px 6px'; });
+    const headH = thead.getBoundingClientRect().height || 30;
+    const perRow = Math.max(14, (totalH - headH) / rows);
+    const vPad = Math.max(1, Math.min(20, perRow * 0.22));
+    const fontPx = Math.max(12, Math.min(56, perRow - vPad*2 - 2));
+    table.querySelectorAll('td,th').forEach(c=>{ c.style.padding = vPad.toFixed(1)+'px 10px'; });
     table.style.fontSize = fontPx.toFixed(1) + 'px';
   });
 }
@@ -367,8 +411,8 @@ function renderOpsDetailPanel(){
 }
 /* Ajuste de fonte/espaçamento por tabela — usada tanto pela tabela de
    Operações Detalhadas quanto pela tabela ao vivo do Sistema de
-   Conferência, para as duas manterem a MESMA escala visual na Tela 3
-   (mesmo algoritmo, mesmos limites de fonte). */
+   Conferência, para as duas escalarem o texto conforme o espaço
+   disponível em cada tela (mesmo algoritmo, mesmos limites de fonte). */
 function fitTableRows(tableId, rowCount){
   const table = document.getElementById(tableId);
   const wrap = table ? table.closest('.scroll') : null;
@@ -376,10 +420,10 @@ function fitTableRows(tableId, rowCount){
   if(!wrap || !table || !thead || !rowCount) return;
   requestAnimationFrame(()=>{
     const totalH = wrap.clientHeight;
-    const headH = thead.getBoundingClientRect().height || 22;
-    const perRow = Math.max(10, (totalH - headH) / rowCount);
-    const vPad = Math.max(0.5, Math.min(7, perRow * 0.22));
-    const fontPx = Math.max(8, Math.min(18, perRow - vPad*2 - 2));
+    const headH = thead.getBoundingClientRect().height || 30;
+    const perRow = Math.max(14, (totalH - headH) / rowCount);
+    const vPad = Math.max(1, Math.min(20, perRow * 0.22));
+    const fontPx = Math.max(12, Math.min(56, perRow - vPad*2 - 2));
     table.querySelectorAll('td,th').forEach(c=>{
       c.style.padding = c.classList.contains('status-cell') ? '0' : vPad.toFixed(1)+'px 10px';
     });
@@ -398,26 +442,27 @@ window.addEventListener('resize', ()=>{
 /* Zoom por tela — CSS "zoom" (100% = tamanho normal). Ajustável em
    config.html; útil quando a TV física exige um pouco mais/menos de
    escala em alguma das telas.
-   A Tela 2 é uma página externa carregada em <iframe> (mao-de-obra.html):
-   aplicar "zoom" no <div> que envolve o iframe não tem efeito nenhum
-   sobre o conteúdo renderizado dentro dele, porque o iframe é um
-   documento HTML independente com seu próprio layout. Por isso o zoom
-   da Tela 2 é aplicado diretamente no <body> do documento carregado
-   dentro do iframe (mesma origem, então dá para acessar o
+   A Tela 5 (Mão de Obra) é uma página externa carregada em <iframe>
+   (mao-de-obra.html): aplicar "zoom" no <div> que envolve o iframe não
+   tem efeito nenhum sobre o conteúdo renderizado dentro dele, porque o
+   iframe é um documento HTML independente com seu próprio layout. Por
+   isso o zoom da Tela 5 é aplicado diretamente no <body> do documento
+   carregado dentro do iframe (mesma origem, então dá para acessar o
    contentDocument). */
 function applyZoom(){
-  const z1 = document.getElementById('screen1');
-  const z3 = document.getElementById('screen3');
-  if(z1) z1.style.zoom = (CFG.zoom1 || 100) + '%';
-  if(z3) z3.style.zoom = (CFG.zoom3 || 100) + '%';
-  applyScreen2Zoom();
+  for(let n=1;n<=SCREEN_COUNT;n++){
+    if(n===5) continue; // Mão de Obra tratada à parte (iframe)
+    const el = document.getElementById('screen'+n);
+    if(el) el.style.zoom = (CFG['zoom'+n] || 100) + '%';
+  }
+  applyScreen5Zoom();
 }
-function applyScreen2Zoom(){
-  const frame = document.getElementById('s2Frame');
+function applyScreen5Zoom(){
+  const frame = document.getElementById('s5Frame');
   if(!frame) return;
   try{
     const doc = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
-    if(doc && doc.body) doc.body.style.zoom = (CFG.zoom2 || 100) + '%';
+    if(doc && doc.body) doc.body.style.zoom = (CFG.zoom5 || 100) + '%';
   }catch(e){ /* conteúdo ainda não carregou ou é de outra origem — ignora */ }
 }
 
@@ -439,11 +484,12 @@ function startRotation(){
   if(rotationTimer) clearTimeout(rotationTimer);
   let current = 1;
   function showScreen(n){
-    document.getElementById('screen1').classList.toggle('active', n===1);
-    document.getElementById('screen2').classList.toggle('active', n===2);
-    document.getElementById('screen3').classList.toggle('active', n===3);
-    const dur = (n===1 ? CFG.dur1 : n===2 ? CFG.dur2 : CFG.dur3) * 1000;
-    rotationTimer = setTimeout(()=>{ current = current===3 ? 1 : current+1; showScreen(current); }, dur);
+    for(let i=1;i<=SCREEN_COUNT;i++){
+      const el = document.getElementById('screen'+i);
+      if(el) el.classList.toggle('active', i===n);
+    }
+    const dur = (CFG['dur'+n] || 15) * 1000;
+    rotationTimer = setTimeout(()=>{ current = current===SCREEN_COUNT ? 1 : current+1; showScreen(current); }, dur);
   }
   showScreen(1);
 }
@@ -504,7 +550,7 @@ function listenConfig(){
   db1.collection(CONFIG_COLLECTION).doc(CONFIG_DOC).onSnapshot(doc=>{
     if(!doc.exists) return;
     const data = doc.data();
-    CFG = Object.assign(defaultConfig(), data);
+    CFG = migrateScreenTimings(Object.assign(defaultConfig(), data), data);
     try{ localStorage.setItem(LS_KEY, JSON.stringify(CFG)); }catch(e){}
     renderAll();
     // Se o login do Sistema de Conferência mudou, reautentica sem
@@ -575,7 +621,7 @@ function renderBarList(containerId, obj){
 }
 
 /* =====================================================================
-   TELA 3 — ÍNDICE DE OPERAÇÕES (ao vivo, Sistema de Conferência)
+   TELA 4 — ÍNDICE DE OPERAÇÕES (ao vivo, Sistema de Conferência)
 ===================================================================== */
 function fieldFallback(d, keys){
   for(const k of keys){ if(d[k]!==undefined && d[k]!==null && d[k]!=='') return d[k]; }
@@ -649,8 +695,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
   startRotation();
   setupFullscreen();
   initFirebase();
-  const s2Frame = document.getElementById('s2Frame');
-  if(s2Frame) s2Frame.addEventListener('load', applyScreen2Zoom);
+  const s5Frame = document.getElementById('s5Frame');
+  if(s5Frame) s5Frame.addEventListener('load', applyScreen5Zoom);
 });
 </script>
 </body>
